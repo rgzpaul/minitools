@@ -1,115 +1,105 @@
-<!-- v1.1 -->
+<!-- v1.2 -->
 <!DOCTYPE html>
+<html lang="en">
+
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text Range Extractor</title>
     <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
     <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
-    <link href="https://assets.website-files.com/6246ac7990532afc2998139b/css/bulkr.61864f60c.css" rel="stylesheet" type="text/css" />
-    <style>
-        textarea { resize: vertical; }
-        .result-area {
-            background: #fafafa;
-            padding: 20px;
-            margin-top: 20px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            font-family: monospace;
-            white-space: pre;
-            cursor: pointer;
-            transition: background-color 0.2s;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#006E81',
+                        'primary-dark': '#006E81',
+                        secondary: '#814000',
+                    }
+                }
+            }
         }
-        .result-area:hover {
-            background: #f5f5f5;
-        }
-        .copy-feedback {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #006e81;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 4px;
-            display: none;
-        }
-        .selector {
-            margin: 20px 0;
-            display: flex;
-            gap: 20px;
-        }
-        .preview-area {
-            font-family: monospace;
-            white-space: pre;
-            margin: 10px 0;
-            line-height: 1.5;
-            color: #666;
-            text-align: left;
-        }
-        .highlight {
-            background: #006e81;
-            color: white;
-        }
-    </style>
+    </script>
 </head>
 
-<body>
-    <div class="section wf-section">
-        <div class="container">
-            <h1>Extr</h1>
-            <h2>Text Range Extractor</h2>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800">Extr</h1>
+            <p class="text-gray-600 text-center mt-1">Text Range Extractor</p>
         </div>
-    </div>
-    <div class="section grow wf-section">
-        <div class="container">
-            <div class="form w-form">
-                <form id="extract-form">
-                    <label for="inTxt" class="field-label">Input text</label>
-                    <textarea id="inTxt" class="text-field area w-input" placeholder="Paste your text here..." oninput="validatePositions()"></textarea>
-                    
-                    <div id="preview" class="preview-area"></div>
+    </header>
 
-                    <div class="selector">
-                        <label class="field-label">
-                            <input type="radio" name="mode" value="extract" checked> Extract range
-                        </label>
-                        <label class="field-label">
-                            <input type="radio" name="mode" value="remove"> Remove range
-                        </label>
-                    </div>
-
-                    <div class="selector">
-                        <label class="field-label">
-                            <input type="radio" name="direction" value="left" checked> Start from left
-                        </label>
-                        <label class="field-label">
-                            <input type="radio" name="direction" value="right"> Start from right
-                        </label>
-                    </div>
-
-                    <div class="form-line">
-                        <div class="text-field-wrapper">
-                            <label for="startPos" class="field-label">Start position</label>
-                            <input type="number" class="text-field w-input" min="0" value="0" id="startPos" oninput="validatePositions()" />
-                        </div>
-                        <div class="text-field-wrapper">
-                            <label for="endPos" class="field-label">End position</label>
-                            <input type="number" class="text-field w-input" min="0" value="0" id="endPos" oninput="validatePositions()" />
-                        </div>
+    <main class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <form id="extract-form">
+                <div class="space-y-4">
+                    <div>
+                        <label for="inTxt" class="block text-sm font-medium text-gray-700 mb-2">Input text</label>
+                        <textarea id="inTxt" class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary resize-y" 
+                                placeholder="Paste your text here..." oninput="validatePositions()"></textarea>
                     </div>
                     
-                    <a href="#" class="button w-button" onclick="processText(); return false;">Process</a>
-                </form>
+                    <div id="preview" class="font-mono whitespace-pre text-left text-gray-600 leading-relaxed"></div>
 
-                <div id="result" class="result-area" style="display: none;" onclick="copyToClipboard(this)"></div>
-                <div id="copyFeedback" class="copy-feedback">Copied to clipboard!</div>
+                    <div class="flex flex-wrap gap-6 py-2">
+                        <div class="flex gap-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="mode" value="extract" checked class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700">Extract range</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="mode" value="remove" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700">Remove range</span>
+                            </label>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="direction" value="left" checked class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700">Start from left</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="direction" value="right" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                <span class="ml-2 text-sm text-gray-700">Start from right</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex-1">
+                            <label for="startPos" class="block text-sm font-medium text-gray-700 mb-2">Start position</label>
+                            <input type="number" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                                min="0" value="0" id="startPos" oninput="validatePositions()" />
+                        </div>
+                        <div class="flex-1">
+                            <label for="endPos" class="block text-sm font-medium text-gray-700 mb-2">End position</label>
+                            <input type="number" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                                min="0" value="0" id="endPos" oninput="validatePositions()" />
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" 
+                            onclick="processText(); return false;">Process</button>
+                </div>
+            </form>
+
+            <div id="result" class="bg-gray-50 p-5 mt-6 border border-gray-200 rounded-lg font-mono whitespace-pre cursor-pointer hover:bg-gray-100 transition duration-200 hidden" 
+                 onclick="copyToClipboard(this)"></div>
+            
+            <div id="copyFeedback" class="fixed bottom-5 right-5 bg-primary text-white py-2 px-4 rounded-lg shadow-md hidden">
+                Copied to clipboard!
             </div>
         </div>
-    </div>
-    <div class="section wf-section">
-        <div class="container">
-            <div>© <a href="https://minisoft.it/">Minisoft</a> — All rights reserved</div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <p class="text-gray-600 text-center">&copy; <a href="https://minisoft.it/" class="text-primary hover:text-primary-dark">Minisoft</a> — All rights reserved</p>
         </div>
-    </div>
+    </footer>
 
     <script>
         function validatePositions() {
@@ -137,14 +127,14 @@
                 const line = lines[i];
                 if (direction === 'left') {
                     preview += line.substring(0, startPos) + 
-                              '<span class="highlight">' + 
+                              '<span class="bg-primary text-white">' + 
                               line.substring(startPos, endPos) + 
                               '</span>' + 
                               line.substring(endPos) + '\n';
                 } else {
                     let len = line.length;
                     preview += line.substring(0, len - endPos) + 
-                              '<span class="highlight">' + 
+                              '<span class="bg-primary text-white">' + 
                               line.substring(len - endPos, len - startPos) + 
                               '</span>' + 
                               line.substring(len - startPos) + '\n';
@@ -183,19 +173,20 @@
 
             const resultArea = document.getElementById("result");
             resultArea.textContent = result;
-            resultArea.style.display = 'block';
+            resultArea.classList.remove('hidden');
         }
 
         function copyToClipboard(element) {
             const text = element.textContent;
             navigator.clipboard.writeText(text).then(() => {
                 const feedback = document.getElementById("copyFeedback");
-                feedback.style.display = 'block';
+                feedback.classList.remove('hidden');
                 setTimeout(() => {
-                    feedback.style.display = 'none';
+                    feedback.classList.add('hidden');
                 }, 2000);
             });
         }
     </script>
 </body>
+
 </html>

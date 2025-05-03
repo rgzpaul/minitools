@@ -1,55 +1,74 @@
-<!-- v1.1 -->
+<!-- v1.2 -->
 <!DOCTYPE html>
+<html lang="en">
+
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>tBody Extractor</title>
     <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
     <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
-    <link href="https://assets.website-files.com/6246ac7990532afc2998139b/css/bulkr.61864f60c.css" rel="stylesheet" type="text/css" />
-    <style>
-        textarea { resize: vertical; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#006E81',
+                        'primary-dark': '#006E81',
+                        secondary: '#814000',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 
-<body>
-    <div class="section wf-section">
-        <div class="container">
-            <h1>tBody Extractor</h1>
-            <h2>HTML Table Data Extractor</h2>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800">tBody Extractor</h1>
+            <p class="text-gray-600 text-center mt-1">HTML Table Data Extractor</p>
         </div>
-    </div>
-    <div class="section grow wf-section">
-        <div class="container">
-            <div class="form w-form">
-                <form method="post" id="wf-form-" name="wf-form-" class="form">
-                    <label for="html" class="field-label">Paste your &lt;tbody&gt; here</label>
-                    <textarea name="html" class="text-field area w-input" required></textarea>
+    </header>
 
-                    <label for="columns" class="field-label">Column indices to extract</label>
-                    <input type="text" name="columns" class="text-field w-input" placeholder="1,2" required />
+    <main class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <form method="post" id="extraction-form" class="space-y-4">
+                <div>
+                    <label for="html" class="block text-sm font-medium text-gray-700 mb-2">Paste your &lt;tbody&gt; here</label>
+                    <textarea name="html" class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary resize-y" 
+                              required></textarea>
+                </div>
+                
+                <div>
+                    <label for="columns" class="block text-sm font-medium text-gray-700 mb-2">Column indices to extract</label>
+                    <input type="text" name="columns" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                           placeholder="1,2" required />
+                </div>
+                
+                <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Extract Data
+                </button>
+            </form>
 
-                    <input type="submit" value="Extract Data" class="button w-button" />
-                </form>
-
-                <?php if ($_SERVER["REQUEST_METHOD"] == "POST"): ?>
-                <div class="success-message w-form-done" style="display: block;">
-                    <h2 style="color: 
-#006e81; text-align: left;">Extracted Data:</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-                        <thead>
+            <?php if ($_SERVER["REQUEST_METHOD"] == "POST"): ?>
+            <div class="mt-8">
+                <h2 class="text-xl font-semibold text-primary mb-4 text-left">Extracted Data:</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-primary">
                             <tr>
                                 <?php 
                                 $selectedColumns = explode(',', $_POST['columns']);
                                 foreach ($selectedColumns as $index): ?>
-                                    <th style="background-color: 
-#006e81; color: white; padding: 12px; text-align: left;">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                                         Column <?php echo htmlspecialchars(trim($index)); ?>
                                     </th>
                                 <?php endforeach; ?>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="bg-white divide-y divide-gray-200">
                             <?php
                             $html = $_POST['html'];
                             $dom = new DOMDocument;
@@ -63,7 +82,7 @@
                                 foreach ($selectedColumns as $index) {
                                     $index = intval(trim($index)) - 1;
                                     if ($index >= 0 && isset($cells[$index])) {
-                                        echo "<td style='padding: 10px; border: 1px solid rgba(0,0,0,0.1);'>" . 
+                                        echo "<td class='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>" . 
                                              htmlspecialchars(trim($cells[$index]->textContent)) . 
                                              "</td>";
                                     }
@@ -74,14 +93,16 @@
                         </tbody>
                     </table>
                 </div>
-                <?php endif; ?>
             </div>
+            <?php endif; ?>
         </div>
-    </div>
-    <div class="section wf-section">
-        <div class="container">
-            <div>© <a href="https://minisoft.it/">Minisoft</a> — All rights reserved</div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <p class="text-gray-600 text-center">&copy; <a href="https://minisoft.it/" class="text-primary hover:text-primary-dark">Minisoft</a> — All rights reserved</p>
         </div>
-    </div>
+    </footer>
 </body>
+
 </html>

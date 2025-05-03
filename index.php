@@ -1,4 +1,4 @@
-<!-- v1.1 -->
+<!-- v1.2 -->
 <?php
 // Directory to scan
 $directory = __DIR__;

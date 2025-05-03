@@ -1,55 +1,76 @@
-<!-- v1.1 -->
+<!-- v1.2 -->
 <!DOCTYPE html>
+<html lang="en">
+
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk QR-Code Generator</title>
     <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
     <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
-    <link href="https://assets.website-files.com/6246ac7990532afc2998139b/css/bulkr.61864f60c.css" rel="stylesheet" type="text/css" />
-    <style>
-        textarea { resize: vertical; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#006E81',
+                        'primary-dark': '#006E81',
+                        secondary: '#814000',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 
-<body>
-    <div class="section wf-section">
-        <div class="container">
-            <h1>Bulkr</h1>
-            <h2>Bulk QR-Code Generator</h2>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800">Bulkr</h1>
+            <p class="text-gray-600 text-center mt-1">Bulk QR-Code Generator</p>
         </div>
-    </div>
-    <div class="section grow wf-section">
-        <div class="container">
-            <div class="form w-form">
-                <form id="qr-form">
-                    <div class="form-line">
-                        <div class="text-field-wrapper">
-                            <label for="codeSize" class="field-label">Code size (pixels)</label>
-                            <input type="number" class="text-field w-input" min="40" value="100" id="codeSize" />
-                        </div>
-                        <div class="text-field-wrapper">
-                            <label for="codeMargin" class="field-label">Code margin (pixels)</label>
-                            <input type="number" class="text-field w-input" min="0" value="2" id="codeMargin" />
-                        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <form id="qr-form" class="space-y-4">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="codeSize" class="block text-sm font-medium text-gray-700 mb-2">Code size (pixels)</label>
+                        <input type="number" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                               min="40" value="100" id="codeSize" />
                     </div>
-                    
-                    <label for="prefixTxt" class="field-label">Code prefix</label>
-                    <input type="text" class="text-field w-input" id="prefixTxt" />
-                    
-                    <label for="inTxt" class="field-label">Code values</label>
-                    <textarea id="inTxt" class="text-field area w-input" placeholder="Enter each text on a new line:"></textarea>
-                    
-                    <a href="#" class="button w-button" onclick="generateQRcodes()">Download QR-Codes</a>
-                </form>
-            </div>
+                    <div class="flex-1">
+                        <label for="codeMargin" class="block text-sm font-medium text-gray-700 mb-2">Code margin (pixels)</label>
+                        <input type="number" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                               min="0" value="2" id="codeMargin" />
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="prefixTxt" class="block text-sm font-medium text-gray-700 mb-2">Code prefix</label>
+                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                           id="prefixTxt" />
+                </div>
+                
+                <div>
+                    <label for="inTxt" class="block text-sm font-medium text-gray-700 mb-2">Code values</label>
+                    <textarea id="inTxt" class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary resize-y" 
+                              placeholder="Enter each text on a new line:"></textarea>
+                </div>
+                
+                <button type="button" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" 
+                        onclick="generateQRcodes()">Download QR-Codes</button>
+            </form>
         </div>
-    </div>
-    <div class="section wf-section">
-        <div class="container">
-            <div>© <a href="https://minisoft.it/">Minisoft</a> — All rights reserved</div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <p class="text-gray-600 text-center">&copy; <a href="https://minisoft.it/" class="text-primary hover:text-primary-dark">Minisoft</a> — All rights reserved</p>
         </div>
-    </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/gh/papnkukn/qrcode-svg@e48892136b1655fa557d45b521120f482afafd3d/dist/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/yWorks/svg2pdf.js@7737880184e16e59e4c01037ff6ff5bbba07287b/dist/svg2pdf.min.js"></script>
@@ -99,4 +120,5 @@
         }
     </script>
 </body>
+
 </html>
