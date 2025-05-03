@@ -6,98 +6,79 @@ $directory = __DIR__;
 $self = basename(__FILE__);
 ?>
 <!DOCTYPE html>
+<html lang="en">
 
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minitools</title>
     <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
     <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
-    <link href="https://assets.website-files.com/6246ac7990532afc2998139b/css/bulkr.61864f60c.css" rel="stylesheet" type="text/css" />
-    <style>
-        ul {
-            margin: 0;
-            padding: 0;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#006E81',
+                        'primary-dark': '#006E81',
+                        secondary: '#814000',
+                    }
+                }
+            }
         }
-
-        .tools-list {
-            list-style-type: none;
-            text-align: center;
-        }
-
-        .tools-list li {
-            margin: 16px 0;
-        }
-
-        .tools-list a {
-            display: inline-block;
-            color: #006e81;
-            text-decoration: none;
-            padding: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            background: #fafafa;
-            width: 100%;
-            box-sizing: border-box;
-            transition: background-color 0.2s;
-        }
-
-        .tools-list a:hover {
-            background: #f5f5f5;
-        }
-    </style>
+    </script>
 </head>
 
-<body>
-    <div class="section wf-section">
-        <div class="container">
-            <h1>Minitools</h1>
-            <h2>Utilities Collection</h2>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800">Minitools</h1>
+            <p class="text-gray-600 text-center mt-1">Utilities Collection</p>
         </div>
-    </div>
-    <div class="section grow wf-section">
-        <div class="container">
-            <div class="form w-form">
-                <ul class="tools-list">
-                    <?php
-                    if ($handle = opendir($directory)) {
-                        $files = array();
+    </header>
 
-                        // First collect all valid files
-                        while (false !== ($file = readdir($handle))) {
-                            if (
-                                $file != $self
-                                && $file != "index.php"
-                                && $file[0] != "."
-                                && !(is_dir($directory . "/" . $file) && $file[0] == ".")
-                                && !preg_match('/\.md$/', $file)
-                            ) {
-                                $files[] = $file;
-                            }
-                        }
-                        closedir($handle);
+    <main class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
+        <ul class="space-y-4">
+            <?php
+            if ($handle = opendir($directory)) {
+                $files = array();
 
-                        // Sort files alphabetically
-                        sort($files);
-
-                        // Then output the links
-                        foreach ($files as $file) {
-                            $fileName = pathinfo($file, PATHINFO_FILENAME);
-                            $filePath = htmlspecialchars($file);
-                            echo "<li><a href='$filePath'>$fileName</a></li>";
-                        }
-                    } else {
-                        echo "<p>Could not open directory.</p>";
+                // First collect all valid files
+                while (false !== ($file = readdir($handle))) {
+                    if (
+                        $file != $self
+                        && $file != "index.php"
+                        && $file[0] != "."
+                        && !(is_dir($directory . "/" . $file) && $file[0] == ".")
+                        && !preg_match('/\.md$/', $file)
+                    ) {
+                        $files[] = $file;
                     }
-                    ?>
-                </ul>
-            </div>
+                }
+                closedir($handle);
+
+                // Sort files alphabetically
+                sort($files);
+
+                // Then output the links
+                foreach ($files as $file) {
+                    $fileName = pathinfo($file, PATHINFO_FILENAME);
+                    $filePath = htmlspecialchars($file);
+                    echo "<li class='text-center'><a href='$filePath' class='inline-block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-primary hover:bg-gray-50 transition duration-200'>$fileName</a></li>";
+                }
+            } else {
+                echo "<p class='text-center text-gray-700'>Could not open directory.</p>";
+            }
+            ?>
+        </ul>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <p class="text-gray-600 text-center">&copy; <a href="https://minisoft.it/" class="text-primary hover:text-primary-dark">Minisoft</a> — All rights reserved</p>
         </div>
-    </div>
-    <div class="section wf-section">
-        <div class="container">
-            <div>© <a href="https://minisoft.it/">Minisoft</a> — All rights reserved</div>
-        </div>
-    </div>
+    </footer>
 </body>
 
 </html>
