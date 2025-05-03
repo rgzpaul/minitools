@@ -21,4 +21,4 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
           port: 21
-          server-dir: /minisoft.it/www/tools
+          server-dir: /minisoft.it/www/tools/
