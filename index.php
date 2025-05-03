@@ -1,4 +1,4 @@
-<!-- v1.0 -->
+<!-- v1.1 -->
 <?php
 // Directory to scan
 $directory = __DIR__;
@@ -69,6 +69,7 @@ $self = basename(__FILE__);
                                 && $file != "index.php"
                                 && $file[0] != "."
                                 && !(is_dir($directory . "/" . $file) && $file[0] == ".")
+                                && !preg_match('/\.md$/', $file)
                             ) {
                                 $files[] = $file;
                             }
