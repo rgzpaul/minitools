@@ -1,3 +1,4 @@
+<!-- v1.0 -->
 <?php
 // Directory to scan
 $directory = __DIR__;
@@ -64,12 +65,10 @@ $self = basename(__FILE__);
                         // First collect all valid files
                         while (false !== ($file = readdir($handle))) {
                             if (
-                                $file != "."
-                                && $file != ".."
-                                && $file != $self
+                                $file != $self
                                 && $file != "index.php"
-                                && $file != ".htaccess"
-                                && $file != "mailer"
+                                && $file[0] != "."
+                                && !(is_dir($directory . "/" . $file) && $file[0] == ".")
                             ) {
                                 $files[] = $file;
                             }
