@@ -1,4 +1,4 @@
-<!-- v1.2 -->
+<!-- v1.3 -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -34,11 +34,23 @@
     </header>
 
     <main class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Enter the text you want to convert into a QR code in the input field below.</li>
+                    <li>The QR code will be generated in real-time as you type.</li>
+                    <li>Right-click on the QR code to save it as an image.</li>
+                </ol>
+            </div>
+        </div>
+
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Enter text</label>
-                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg" 
                            placeholder="Type anything..." oninput="updateQR(this.value)">
                 </div>
                 <div id="qrcode" class="flex justify-center mt-6"></div>

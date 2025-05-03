@@ -55,9 +55,9 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Paste your HTML table here:</label>
-                    <textarea id="tableInput" class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" required></textarea>
+                    <textarea id="tableInput" class="w-full h-40 p-3 border border-gray-300 rounded-lg" required></textarea>
                 </div>
-                <button id="analyzeButton" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">Analyze Table</button>
+                <button id="analyzeButton" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">Analyze Table</button>
             </div>
         </div>
 
@@ -70,7 +70,7 @@
                     <button id="selectAll" class="text-sm text-primary hover:text-primary-dark transition duration-200">Select All</button>
                     <button id="deselectAll" class="text-sm text-primary hover:text-primary-dark transition duration-200">Deselect All</button>
                 </div>
-                <button id="processButton" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">Generate Table</button>
+                <button id="processButton" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">Generate Table</button>
             </div>
         </div>
 
@@ -85,11 +85,11 @@
                 <div class="flex flex-col sm:flex-row gap-4">
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Include rows containing:</label>
-                        <input type="text" id="filterInput" placeholder="Filter content..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                        <input type="text" id="filterInput" placeholder="Filter content..." class="w-full p-3 border border-gray-300 rounded-lg">
                     </div>
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Exclude rows containing:</label>
-                        <input type="text" id="excludeInput" placeholder="Content to exclude..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                        <input type="text" id="excludeInput" placeholder="Content to exclude..." class="w-full p-3 border border-gray-300 rounded-lg">
                     </div>
                     <div class="flex items-end">
                         <button id="resetFilters" class="text-sm text-primary hover:text-primary-dark transition duration-200 px-3 py-1">Reset Filters</button>
@@ -140,7 +140,7 @@
                             .attr('type', 'checkbox')
                             .attr('id', `col-${index}`)
                             .attr('checked', true)
-                            .addClass('h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded')
+                            .addClass('h-4 w-4 text-primary border-gray-300 rounded')
                         )
                         .append(
                             $('<label>')

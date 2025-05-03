@@ -1,4 +1,4 @@
-<!-- v1.2 -->
+<!-- v1.3 -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -33,34 +33,47 @@
     </header>
 
     <main class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Set the desired QR code size and margin using the input fields.</li>
+                    <li>Enter a prefix (optional) to prepend to each QR code value.</li>
+                    <li>Paste the values for which you want to generate QR codes, one per line.</li>
+                    <li>Click "Download QR-Codes" to generate and download all QR codes as a PDF.</li>
+                </ol>
+            </div>
+        </div>
+
         <div class="bg-white rounded-lg shadow-md p-6">
             <form id="qr-form" class="space-y-4">
                 <div class="flex flex-col sm:flex-row gap-4">
                     <div class="flex-1">
                         <label for="codeSize" class="block text-sm font-medium text-gray-700 mb-2">Code size (pixels)</label>
-                        <input type="number" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                        <input type="number" class="w-full p-3 border border-gray-300 rounded-lg" 
                                min="40" value="100" id="codeSize" />
                     </div>
                     <div class="flex-1">
                         <label for="codeMargin" class="block text-sm font-medium text-gray-700 mb-2">Code margin (pixels)</label>
-                        <input type="number" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                        <input type="number" class="w-full p-3 border border-gray-300 rounded-lg" 
                                min="0" value="2" id="codeMargin" />
                     </div>
                 </div>
                 
                 <div>
                     <label for="prefixTxt" class="block text-sm font-medium text-gray-700 mb-2">Code prefix</label>
-                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg" 
                            id="prefixTxt" />
                 </div>
                 
                 <div>
                     <label for="inTxt" class="block text-sm font-medium text-gray-700 mb-2">Code values</label>
-                    <textarea id="inTxt" class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary resize-y" 
+                    <textarea id="inTxt" class="w-full h-40 p-3 border border-gray-300 rounded-lg resize-y" 
                               placeholder="Enter each text on a new line:"></textarea>
                 </div>
                 
-                <button type="button" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" 
+                <button type="button" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200" 
                         onclick="generateQRcodes()">Download QR-Codes</button>
             </form>
         </div>

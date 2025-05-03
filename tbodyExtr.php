@@ -33,21 +33,33 @@
     </header>
 
     <main class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Paste your &lt;tbody&gt; HTML content in the input area below.</li>
+                    <li>Specify the column indices you want to extract, separated by commas (e.g., 1,2).</li>
+                    <li>Click "Extract Data" to process the table and view the extracted content.</li>
+                </ol>
+            </div>
+        </div>
+
         <div class="bg-white rounded-lg shadow-md p-6">
             <form method="post" id="extraction-form" class="space-y-4">
                 <div>
                     <label for="html" class="block text-sm font-medium text-gray-700 mb-2">Paste your &lt;tbody&gt; here</label>
-                    <textarea name="html" class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary resize-y" 
+                    <textarea name="html" class="w-full h-40 p-3 border border-gray-300 rounded-lg resize-y" 
                               required></textarea>
                 </div>
                 
                 <div>
                     <label for="columns" class="block text-sm font-medium text-gray-700 mb-2">Column indices to extract</label>
-                    <input type="text" name="columns" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" 
+                    <input type="text" name="columns" class="w-full p-3 border border-gray-300 rounded-lg" 
                            placeholder="1,2" required />
                 </div>
                 
-                <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">
                     Extract Data
                 </button>
             </form>
