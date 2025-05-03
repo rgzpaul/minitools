@@ -38,7 +38,7 @@ $self = basename(__FILE__);
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
+    <main class="container mx-auto px-4 py-8 max-w-md flex-grow">
         <ul class="space-y-4">
             <?php
             if ($handle = opendir($directory)) {
