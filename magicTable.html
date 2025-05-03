@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MagicTable - Table Processor</title>
+    <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
+    <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#62748E', // blue-500
+                        'primary-dark': '#45556C', // blue-600
+                        secondary: '#71717B', // slate-500
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <h1 class="text-3xl font-bold text-gray-800">MagicTable</h1>
+            <p class="text-gray-600 mt-1">Interactive HTML Table Processor</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Paste your HTML table in the text area provided</li>
+                    <li>Click "Analyze Table" to identify column headers</li>
+                    <li>Select which columns you want to include in the processed table</li>
+                    <li>Click "Generate Table" to create your interactive table</li>
+                    <li>Use the filtering options to include or exclude specific content</li>
+                    <li>Click on column headers to sort the table by that column</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Input Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Input Your Data</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Paste your HTML table here:</label>
+                    <textarea id="tableInput" class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" required></textarea>
+                </div>
+                <button id="analyzeButton" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">Analyze Table</button>
+            </div>
+        </div>
+
+        <!-- Column Selection -->
+        <div id="columnSelection" class="bg-white rounded-lg shadow-md p-6 mb-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Select Columns to Include</h2>
+            <div class="space-y-4">
+                <div id="columnCheckboxes" class="space-y-2"></div>
+                <div class="flex gap-4">
+                    <button id="selectAll" class="text-sm text-primary hover:text-primary-dark transition duration-200">Select All</button>
+                    <button id="deselectAll" class="text-sm text-primary hover:text-primary-dark transition duration-200">Deselect All</button>
+                </div>
+                <button id="processButton" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">Generate Table</button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Results</h2>
+
+            <div class="space-y-4 mb-4">
+                <div class="text-sm text-gray-600">
+                    Showing <span id="filteredCount">0</span> of <span id="totalCount">0</span> rows
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Include rows containing:</label>
+                        <input type="text" id="filterInput" placeholder="Filter content..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Exclude rows containing:</label>
+                        <input type="text" id="excludeInput" placeholder="Content to exclude..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+                    <div class="flex items-end">
+                        <button id="resetFilters" class="text-sm text-primary hover:text-primary-dark transition duration-200 px-3 py-1">Reset Filters</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <div id="processedTable"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <p class="text-gray-600 text-center">&copy; 2025 Minisoft — All rights reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            let originalTable = null;
+            let columnHeaders = [];
+
+            $('#analyzeButton').on('click', function() {
+                const tableHtml = $('#tableInput').val();
+
+                // Create a temporary div to parse the HTML
+                const temp = $('<div>').html(tableHtml);
+                originalTable = $(temp).find('table').first();
+
+                if (originalTable.length === 0) {
+                    alert('No valid table found in input');
+                    return;
+                }
+
+                // Extract headers and create checkboxes
+                columnHeaders = [];
+                const checkboxesDiv = $('#columnCheckboxes').empty();
+
+                originalTable.find('th').each(function(index) {
+                    const headerText = $(this).text().trim();
+                    columnHeaders.push(headerText);
+
+                    const checkbox = $('<div>').addClass('flex items-center gap-2')
+                        .append(
+                            $('<input>')
+                            .attr('type', 'checkbox')
+                            .attr('id', `col-${index}`)
+                            .attr('checked', true)
+                            .addClass('h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded')
+                        )
+                        .append(
+                            $('<label>')
+                            .attr('for', `col-${index}`)
+                            .text(headerText)
+                            .addClass('text-sm text-gray-700')
+                        );
+
+                    checkboxesDiv.append(checkbox);
+                });
+
+                $('#columnSelection').removeClass('hidden');
+                $('#results').addClass('hidden');
+            });
+
+            $('#selectAll').on('click', function() {
+                $('#columnCheckboxes input[type="checkbox"]').prop('checked', true);
+            });
+
+            $('#deselectAll').on('click', function() {
+                $('#columnCheckboxes input[type="checkbox"]').prop('checked', false);
+            });
+
+            $('#processButton').on('click', function() {
+                const selectedColumns = [];
+                $('#columnCheckboxes input[type="checkbox"]').each(function(index) {
+                    if ($(this).is(':checked')) {
+                        selectedColumns.push(index);
+                    }
+                });
+
+                if (selectedColumns.length === 0) {
+                    alert('Please select at least one column');
+                    return;
+                }
+
+                processTable(originalTable.clone(), selectedColumns);
+                $('#results').removeClass('hidden');
+            });
+
+            function processTable(table, selectedColumns) {
+                const allColumns = [...Array(columnHeaders.length).keys()];
+                const columnsToRemove = allColumns.filter(i => !selectedColumns.includes(i));
+
+                for (let i = columnsToRemove.length - 1; i >= 0; i--) {
+                    const columnIndex = columnsToRemove[i];
+                    table.find(`th:eq(${columnIndex}), td:nth-child(${columnIndex + 1})`).remove();
+                }
+
+                table.addClass('min-w-full divide-y divide-gray-200');
+                table.find('thead').addClass('bg-gray-50');
+                table.find('tbody').addClass('divide-y divide-gray-200');
+
+                table.find('th').addClass('px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100');
+                table.find('td').addClass('px-6 py-4 whitespace-nowrap text-sm text-gray-900');
+
+                $('#processedTable').html(table);
+                updateCounts();
+                bindEvents();
+            }
+
+            function bindEvents() {
+                $('#processedTable th').on('click', function() {
+                    const column = $(this).index();
+                    const asc = !$(this).hasClass('sort-asc');
+
+                    $('#processedTable th').removeClass('sort-asc sort-desc');
+                    $(this).addClass(asc ? 'sort-asc' : 'sort-desc');
+
+                    sortTable(column, asc);
+                });
+
+                // Combined filtering
+                $('#filterInput, #excludeInput').on('input', function() {
+                    applyFilters();
+                });
+
+                $('#resetFilters').on('click', function() {
+                    $('#filterInput, #excludeInput').val('');
+                    applyFilters();
+                });
+            }
+
+            function applyFilters() {
+                const includeText = $('#filterInput').val().toLowerCase();
+                const excludeText = $('#excludeInput').val().toLowerCase();
+
+                $('#processedTable table tbody tr').each(function() {
+                    const row = $(this);
+                    const text = row.text().toLowerCase();
+                    const includeMatch = includeText === '' || text.includes(includeText);
+                    const excludeMatch = excludeText !== '' && text.includes(excludeText);
+                    row.toggle(includeMatch && !excludeMatch);
+                });
+
+                updateCounts();
+            }
+
+            function sortTable(column, asc) {
+                const tbody = $('#processedTable table tbody');
+                const rows = tbody.find('tr').toArray();
+
+                rows.sort(function(a, b) {
+                    const aText = $(a).find('td').eq(column).text().toLowerCase();
+                    const bText = $(b).find('td').eq(column).text().toLowerCase();
+
+                    if (!isNaN(aText) && !isNaN(bText)) {
+                        return asc ?
+                            Number(aText) - Number(bText) :
+                            Number(bText) - Number(aText);
+                    }
+
+                    return asc ?
+                        aText.localeCompare(bText) :
+                        bText.localeCompare(aText);
+                });
+
+                tbody.empty().append(rows);
+            }
+
+            function updateCounts() {
+                const total = $('#processedTable table tbody tr').length;
+                const visible = $('#processedTable table tbody tr:visible').length;
+                $('#totalCount').text(total);
+                $('#filteredCount').text(visible);
+            }
+        });
+    </script>
+</body>
+
+</html>

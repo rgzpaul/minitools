@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8" />
+    <title>Bulk QR-Code Generator</title>
+    <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
+    <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <link href="https://assets.website-files.com/6246ac7990532afc2998139b/css/bulkr.61864f60c.css" rel="stylesheet" type="text/css" />
+    <style>
+        textarea { resize: vertical; }
+    </style>
+</head>
+
+<body>
+    <div class="section wf-section">
+        <div class="container">
+            <h1>Bulkr</h1>
+            <h2>Bulk QR-Code Generator</h2>
+        </div>
+    </div>
+    <div class="section grow wf-section">
+        <div class="container">
+            <div class="form w-form">
+                <form id="qr-form">
+                    <div class="form-line">
+                        <div class="text-field-wrapper">
+                            <label for="codeSize" class="field-label">Code size (pixels)</label>
+                            <input type="number" class="text-field w-input" min="40" value="100" id="codeSize" />
+                        </div>
+                        <div class="text-field-wrapper">
+                            <label for="codeMargin" class="field-label">Code margin (pixels)</label>
+                            <input type="number" class="text-field w-input" min="0" value="2" id="codeMargin" />
+                        </div>
+                    </div>
+                    
+                    <label for="prefixTxt" class="field-label">Code prefix</label>
+                    <input type="text" class="text-field w-input" id="prefixTxt" />
+                    
+                    <label for="inTxt" class="field-label">Code values</label>
+                    <textarea id="inTxt" class="text-field area w-input" placeholder="Enter each text on a new line:"></textarea>
+                    
+                    <a href="#" class="button w-button" onclick="generateQRcodes()">Download QR-Codes</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="section wf-section">
+        <div class="container">
+            <div>© <a href="https://minisoft.it/">Minisoft</a> — All rights reserved</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/gh/papnkukn/qrcode-svg@e48892136b1655fa557d45b521120f482afafd3d/dist/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/yWorks/svg2pdf.js@7737880184e16e59e4c01037ff6ff5bbba07287b/dist/svg2pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/yWorks/jsPDF@e2a73c5b076e79ea09e3c5ac7c6d0644940e4b2e/dist/jspdf.min.js"></script>
+    <script>
+        function generateQRcodes() {
+            const prefix = document.getElementById("prefixTxt").value;
+            const width = document.getElementById("codeSize").value;
+            const height = width;
+            const codeMargin = document.getElementById("codeMargin").value;
+            
+            const allText = document.getElementById("inTxt").value;
+            const codes = allText.match(/[^\n\r]+/g);
+            if (!codes || codes.length === 0) return;
+
+            const pdf = new jsPDF({
+                unit: 'pt',
+                orientation: 'p',
+                format: [width, height],
+                lineHeight: 1.2
+            });
+
+            pdf.deletePage(1);
+            const svgEl = document.createElement('svg');
+
+            for (const code of codes) {
+                qrcode = new QRCode({
+                    content: prefix + code,
+                    padding: codeMargin,
+                    width: width,
+                    height: height,
+                    color: "black",
+                    background: "none",
+                    ecl: "L"
+                });
+
+                pdf.addPage();
+                svgEl.innerHTML = qrcode.svg();
+                svg2pdf(svgEl, pdf, {
+                    xOffset: 0,
+                    yOffset: 0,
+                    scale: 1
+                });
+            }
+
+            pdf.save('qrcodes');
+        }
+    </script>
+</body>
+</html>

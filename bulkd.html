@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulkd - Multi-URL File Downloader</title>
+    <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
+    <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#62748E', // slate-500
+                        'primary-dark': '#45556C', // slate-600
+                        secondary: '#71717B', // zinc-500
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <h1 class="text-3xl font-bold text-gray-800">Bulkd</h1>
+            <p class="text-gray-600 mt-1">Multi-URL File Downloader</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Paste URLs in the text area below (one URL per line)</li>
+                    <li>Click "Parse URLs" to validate and prepare for download</li>
+                    <li>Use "Download All" to batch download all files, or download individual files using their respective buttons</li>
+                </ol>
+            </div>
+        </div>
+        <!-- Content -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Input Your URLs</h2>
+            <textarea id="urlInput" class="w-full h-48 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary mb-4 resize-y" placeholder="Paste your URLs here, one per line. Example:&#10;https://example.com/file1.pdf&#10;https://example.com/file2.jpg"></textarea>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <button id="parseUrls" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Parse URLs
+                </button>
+                <button id="downloadAll" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                    Download All
+                </button>
+                <button id="clearAll" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary">
+                    Clear All
+                </button>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Results</h2>
+            <div id="status" class="space-y-2"></div>
+            <ul id="urlList" class="mt-4 space-y-2"></ul>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <p class="text-gray-600 text-center">&copy; 2025 Minisoft — All rights reserved</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('urlInput');
+            const parseUrlsBtn = document.getElementById('parseUrls');
+            const downloadAllBtn = document.getElementById('downloadAll');
+            const clearAllBtn = document.getElementById('clearAll');
+            const statusDiv = document.getElementById('status');
+            const urlList = document.getElementById('urlList');
+            
+            // Parse URLs and create list
+            parseUrlsBtn.addEventListener('click', function() {
+                const urls = urlInput.value.trim().split('\n').filter(url => url.trim() !== '');
+                
+                if (urls.length === 0) {
+                    showStatus('Please enter at least one URL.', 'error');
+                    return;
+                }
+                
+                urlList.innerHTML = '';
+                let validUrlsCount = 0;
+                
+                urls.forEach((url, index) => {
+                    try {
+                        url = url.trim();
+                        new URL(url); // This will throw an error if the URL is invalid
+                        
+                        const li = document.createElement('li');
+                        li.className = 'flex items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-gray-200';
+                        
+                        const leftSection = document.createElement('div');
+                        leftSection.className = 'flex items-center flex-grow overflow-hidden mr-4';
+                        
+                        const statusIndicator = document.createElement('span');
+                        statusIndicator.className = 'w-3 h-3 rounded-full bg-gray-300 mr-3 flex-shrink-0';
+                        leftSection.appendChild(statusIndicator);
+                        
+                        const urlSpan = document.createElement('span');
+                        urlSpan.className = 'text-gray-700 truncate';
+                        urlSpan.textContent = url;
+                        urlSpan.title = url;
+                        leftSection.appendChild(urlSpan);
+                        
+                        li.appendChild(leftSection);
+                        
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.className = 'bg-primary hover:bg-primary-dark text-white text-sm py-1 px-3 rounded flex-shrink-0 transition duration-200';
+                        downloadBtn.textContent = 'Download';
+                        downloadBtn.dataset.url = url;
+                        downloadBtn.addEventListener('click', function() {
+                            downloadFile(url, statusIndicator);
+                        });
+                        li.appendChild(downloadBtn);
+                        
+                        urlList.appendChild(li);
+                        validUrlsCount++;
+                    } catch (e) {
+                        showStatus(`Invalid URL skipped: ${url}`, 'error');
+                    }
+                });
+                
+                if (validUrlsCount > 0) {
+                    showStatus(`${validUrlsCount} valid URL(s) parsed and ready for download.`, 'success');
+                    downloadAllBtn.disabled = false;
+                    downloadAllBtn.classList.remove('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+                } else {
+                    showStatus('No valid URLs found. Please check your input.', 'error');
+                    downloadAllBtn.disabled = true;
+                    downloadAllBtn.classList.add('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+                }
+            });
+            
+            // Download a single file
+            function downloadFile(url, statusIndicator) {
+                statusIndicator.className = 'w-3 h-3 rounded-full bg-yellow-400 mr-3 flex-shrink-0';
+                
+                fetch(url, {
+                    method: 'GET',
+                    mode: 'cors' // Try using CORS if available
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const filename = getFilenameFromUrl(url);
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    statusIndicator.className = 'w-3 h-3 rounded-full bg-green-500 mr-3 flex-shrink-0';
+                })
+                .catch(error => {
+                    statusIndicator.className = 'w-3 h-3 rounded-full bg-red-500 mr-3 flex-shrink-0';
+                    console.error('Download error:', error);
+                    
+                    // Try alternative download method for cross-origin restrictions
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = getFilenameFromUrl(url);
+                    a.target = '_blank';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    showStatus(`Direct download initiated for: ${getFilenameFromUrl(url)}. If download doesn't start, the URL might have cross-origin restrictions.`, 'warning');
+                });
+            }
+            
+            // Download all files
+            downloadAllBtn.addEventListener('click', function() {
+                const downloadButtons = document.querySelectorAll('[data-url]');
+                const delay = 1000; // 1 second delay between downloads to avoid overwhelming the browser
+                
+                showStatus(`Starting download of ${downloadButtons.length} files...`, 'info');
+                
+                downloadButtons.forEach((button, index) => {
+                    setTimeout(() => {
+                        const url = button.dataset.url;
+                        const statusIndicator = button.parentNode.querySelector('.rounded-full');
+                        downloadFile(url, statusIndicator);
+                    }, index * delay);
+                });
+            });
+            
+            // Clear all
+            clearAllBtn.addEventListener('click', function() {
+                urlInput.value = '';
+                urlList.innerHTML = '';
+                statusDiv.innerHTML = '';
+                downloadAllBtn.disabled = true;
+                downloadAllBtn.classList.add('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+            });
+            
+            // Helper function to extract filename from URL
+            function getFilenameFromUrl(url) {
+                try {
+                    const parsedUrl = new URL(url);
+                    const pathname = parsedUrl.pathname;
+                    const filename = pathname.substring(pathname.lastIndexOf('/') + 1);
+                    
+                    return filename || 'download';
+                } catch (e) {
+                    return 'download';
+                }
+            }
+            
+            // Helper function to show status messages
+            function showStatus(message, type = 'info') {
+                const div = document.createElement('div');
+                div.className = 'p-3 rounded-lg text-sm mb-3';
+                div.textContent = message;
+                
+                switch (type) {
+                    case 'success':
+                        div.className += ' bg-green-100 text-green-800 border border-green-200';
+                        break;
+                    case 'error':
+                        div.className += ' bg-red-100 text-red-800 border border-red-200';
+                        break;
+                    case 'warning':
+                        div.className += ' bg-yellow-100 text-yellow-800 border border-yellow-200';
+                        break;
+                    default: // info
+                        div.className += ' bg-slate-100 text-slate-800 border border-slate-200';
+                }
+                
+                statusDiv.prepend(div);
+                
+                // Auto-remove status messages after 10 seconds
+                setTimeout(() => {
+                    div.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => {
+                        if (div.parentNode === statusDiv) {
+                            statusDiv.removeChild(div);
+                        }
+                    }, 500);
+                }, 10000);
+            }
+        });
+    </script>
+</body>
+</html>

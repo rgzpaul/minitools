@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8" />
+    <title>Text Range Extractor</title>
+    <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
+    <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <link href="https://assets.website-files.com/6246ac7990532afc2998139b/css/bulkr.61864f60c.css" rel="stylesheet" type="text/css" />
+    <style>
+        textarea { resize: vertical; }
+        .result-area {
+            background: #fafafa;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            font-family: monospace;
+            white-space: pre;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .result-area:hover {
+            background: #f5f5f5;
+        }
+        .copy-feedback {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #006e81;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        .selector {
+            margin: 20px 0;
+            display: flex;
+            gap: 20px;
+        }
+        .preview-area {
+            font-family: monospace;
+            white-space: pre;
+            margin: 10px 0;
+            line-height: 1.5;
+            color: #666;
+            text-align: left;
+        }
+        .highlight {
+            background: #006e81;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section wf-section">
+        <div class="container">
+            <h1>Extr</h1>
+            <h2>Text Range Extractor</h2>
+        </div>
+    </div>
+    <div class="section grow wf-section">
+        <div class="container">
+            <div class="form w-form">
+                <form id="extract-form">
+                    <label for="inTxt" class="field-label">Input text</label>
+                    <textarea id="inTxt" class="text-field area w-input" placeholder="Paste your text here..." oninput="validatePositions()"></textarea>
+                    
+                    <div id="preview" class="preview-area"></div>
+
+                    <div class="selector">
+                        <label class="field-label">
+                            <input type="radio" name="mode" value="extract" checked> Extract range
+                        </label>
+                        <label class="field-label">
+                            <input type="radio" name="mode" value="remove"> Remove range
+                        </label>
+                    </div>
+
+                    <div class="selector">
+                        <label class="field-label">
+                            <input type="radio" name="direction" value="left" checked> Start from left
+                        </label>
+                        <label class="field-label">
+                            <input type="radio" name="direction" value="right"> Start from right
+                        </label>
+                    </div>
+
+                    <div class="form-line">
+                        <div class="text-field-wrapper">
+                            <label for="startPos" class="field-label">Start position</label>
+                            <input type="number" class="text-field w-input" min="0" value="0" id="startPos" oninput="validatePositions()" />
+                        </div>
+                        <div class="text-field-wrapper">
+                            <label for="endPos" class="field-label">End position</label>
+                            <input type="number" class="text-field w-input" min="0" value="0" id="endPos" oninput="validatePositions()" />
+                        </div>
+                    </div>
+                    
+                    <a href="#" class="button w-button" onclick="processText(); return false;">Process</a>
+                </form>
+
+                <div id="result" class="result-area" style="display: none;" onclick="copyToClipboard(this)"></div>
+                <div id="copyFeedback" class="copy-feedback">Copied to clipboard!</div>
+            </div>
+        </div>
+    </div>
+    <div class="section wf-section">
+        <div class="container">
+            <div>© <a href="https://minisoft.it/">Minisoft</a> — All rights reserved</div>
+        </div>
+    </div>
+
+    <script>
+        function validatePositions() {
+            const startPos = document.getElementById("startPos");
+            const endPos = document.getElementById("endPos");
+            
+            if (parseInt(startPos.value) > parseInt(endPos.value)) {
+                endPos.value = startPos.value;
+            }
+            
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const input = document.getElementById("inTxt").value;
+            const startPos = parseInt(document.getElementById("startPos").value) || 0;
+            const endPos = parseInt(document.getElementById("endPos").value) || 0;
+            const direction = document.querySelector('input[name="direction"]:checked').value;
+            
+            const lines = input.split('\n').filter(line => line.trim());
+            if (lines.length === 0) return;
+
+            let preview = '';
+            for (let i = 0; i < Math.min(3, lines.length); i++) {
+                const line = lines[i];
+                if (direction === 'left') {
+                    preview += line.substring(0, startPos) + 
+                              '<span class="highlight">' + 
+                              line.substring(startPos, endPos) + 
+                              '</span>' + 
+                              line.substring(endPos) + '\n';
+                } else {
+                    let len = line.length;
+                    preview += line.substring(0, len - endPos) + 
+                              '<span class="highlight">' + 
+                              line.substring(len - endPos, len - startPos) + 
+                              '</span>' + 
+                              line.substring(len - startPos) + '\n';
+                }
+            }
+            
+            document.getElementById("preview").innerHTML = preview;
+        }
+
+        function processText() {
+            const input = document.getElementById("inTxt").value;
+            const startPos = parseInt(document.getElementById("startPos").value);
+            const endPos = parseInt(document.getElementById("endPos").value);
+            const direction = document.querySelector('input[name="direction"]:checked').value;
+            const mode = document.querySelector('input[name="mode"]:checked').value;
+            
+            const lines = input.split('\n').filter(line => line.trim());
+            let result = '';
+
+            for (let line of lines) {
+                if (direction === 'left') {
+                    if (mode === 'extract') {
+                        result += line.substring(startPos, endPos) + '\n';
+                    } else { // remove
+                        result += line.substring(0, startPos) + line.substring(endPos) + '\n';
+                    }
+                } else {
+                    let len = line.length;
+                    if (mode === 'extract') {
+                        result += line.substring(len - endPos, len - startPos) + '\n';
+                    } else { // remove
+                        result += line.substring(0, len - endPos) + line.substring(len - startPos) + '\n';
+                    }
+                }
+            }
+
+            const resultArea = document.getElementById("result");
+            resultArea.textContent = result;
+            resultArea.style.display = 'block';
+        }
+
+        function copyToClipboard(element) {
+            const text = element.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const feedback = document.getElementById("copyFeedback");
+                feedback.style.display = 'block';
+                setTimeout(() => {
+                    feedback.style.display = 'none';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

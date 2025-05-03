@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContentExtr - HTML Element Extractor</title>
+    <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
+    <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#62748E', // blue-500
+                        'primary-dark': '#45556C', // blue-600
+                        secondary: '#71717B', // slate-500
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <h1 class="text-3xl font-bold text-gray-800">ContentExtr</h1>
+            <p class="text-gray-600 mt-1">HTML Element Extractor</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Paste your HTML content in the text area provided</li>
+                    <li>Enter the attribute name you want to search for (e.g., class, id, data-attribute)</li>
+                    <li>Enter the attribute value to match (e.g., "container", "nav-menu")</li>
+                    <li>Click "Extract Content" to find all matching elements</li>
+                    <li>View the extracted content, including inner text, inner HTML, and outer HTML</li>
+                    <li>Use the "Copy All Texts" button to copy the results to your clipboard</li>
+                </ol>
+            </div>
+        </div>
+        <!-- Content -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Input HTML</h2>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Paste your HTML:</label>
+                <textarea id="htmlInput" class="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary resize-y" placeholder="Paste your HTML here"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Attribute Name:</label>
+                    <input type="text" id="attributeName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="e.g. class, id, data-*">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Attribute Value:</label>
+                    <input type="text" id="attributeValue" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Value to match">
+                </div>
+            </div>
+
+            <button onclick="extractContent()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                Extract Content
+            </button>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Results</h2>
+            <div id="results" class="w-full min-h-40 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <p class="text-gray-600 text-center">&copy; 2025 Minisoft — All rights reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        function extractContent() {
+            const htmlInput = document.getElementById('htmlInput').value;
+            const attributeName = document.getElementById('attributeName').value;
+            const attributeValue = document.getElementById('attributeValue').value;
+            const resultsDiv = document.getElementById('results');
+
+            try {
+                // Create a temporary container
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlInput, 'text/html');
+
+                // Find all elements with matching attribute
+                const elements = doc.querySelectorAll(`[${attributeName}="${attributeValue}"]`);
+
+                if (elements.length === 0) {
+                    resultsDiv.innerHTML = '<p class="text-red-500">No matching elements found.</p>';
+                    return;
+                }
+
+                // Extract and display results
+                let output = '<div class="space-y-4">';
+                elements.forEach((element, index) => {
+                    output += `
+                        <div class="border-b border-gray-200 pb-4">
+                            <p class="font-semibold mb-2 text-gray-800">Match ${index + 1}:</p>
+                            <p class="mb-2"><span class="font-medium text-gray-700">Inner Text:</span> ${element.textContent}</p>
+                            <p class="mb-2"><span class="font-medium text-gray-700">Inner HTML:</span></p>
+                            <pre class="bg-gray-100 p-3 rounded-lg overflow-x-auto text-sm">${escapeHtml(element.innerHTML)}</pre>
+                            <p class="mb-2"><span class="font-medium text-gray-700">Outer HTML:</span></p>
+                            <pre class="bg-gray-100 p-3 rounded-lg overflow-x-auto text-sm">${escapeHtml(element.outerHTML)}</pre>
+                        </div>
+                    `;
+                });
+                output += '</div>';
+
+                // Add "Copy All Texts" button
+                output += '<button onclick="copyAllText()" class="mt-4 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">Copy All Texts</button>';
+                resultsDiv.innerHTML = output;
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function copyAllText() {
+            const resultsDiv = document.getElementById('results');
+            const textElements = resultsDiv.querySelectorAll('p.mb-2');
+            let allText = '';
+
+            // Loop through each matching paragraph and append the text
+            textElements.forEach(element => {
+                if (element.textContent.trim()) {
+                    allText += element.textContent.trim() + '\n';
+                }
+            });
+
+            if (allText) {
+                try {
+                    await navigator.clipboard.writeText(allText);
+
+                    // Create a temporary notification
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transition-opacity duration-500';
+                    notification.textContent = 'All texts copied!';
+                    document.body.appendChild(notification);
+
+                    // Remove the notification after 3 seconds
+                    setTimeout(() => {
+                        notification.classList.add('opacity-0');
+                        setTimeout(() => {
+                            document.body.removeChild(notification);
+                        }, 500);
+                    }, 3000);
+                } catch (err) {
+                    alert('Failed to copy all texts');
+                }
+            } else {
+                alert('No texts to copy');
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+
+</html>
