@@ -39,7 +39,7 @@ $self = basename(__FILE__);
     </header>
 
     <main class="container mx-auto px-4 py-8 max-w-md flex-grow">
-        <ul class="space-y-4">
+        <ul class="grid grid-cols-2 gap-4">
             <?php
             if ($handle = opendir($directory)) {
                 $files = array();
