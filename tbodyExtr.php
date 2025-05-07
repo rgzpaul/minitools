@@ -66,7 +66,7 @@
 
             <?php if ($_SERVER["REQUEST_METHOD"] == "POST"): ?>
             <div class="mt-8">
-                <h2 class="text-xl font-semibold text-primary mb-4 text-left">Extracted Data:</h2>
+                <h2 class="text-xl font-semibold text-primary mb-4 text-left">Extracted Data</h2>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-primary">

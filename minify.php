@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <form method="post">
                 <div>
-                    <label for="js_code" class="block text-sm font-medium text-gray-700 mb-2">Paste your JavaScript code:</label>
+                    <label for="js_code" class="block text-sm font-medium text-gray-700 mb-2">Paste your JavaScript code</label>
                     <textarea 
                         id="js_code" 
                         name="js_code" 

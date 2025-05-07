@@ -50,17 +50,17 @@
         <!-- Content -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Paste your HTML:</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Paste your HTML</label>
                 <textarea id="htmlInput" class="w-full h-40 p-3 border border-gray-300 rounded-lg resize-y" placeholder="Paste your HTML here"></textarea>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Attribute Name:</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Attribute Name</label>
                     <input type="text" id="attributeName" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="e.g. class, id, data-*">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Attribute Value:</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Attribute Value</label>
                     <input type="text" id="attributeValue" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Value to match">
                 </div>
             </div>
@@ -109,11 +109,11 @@
                 elements.forEach((element, index) => {
                     output += `
                         <div class="border-b border-gray-200 pb-4">
-                            <p class="font-semibold mb-2 text-gray-800">Match ${index + 1}:</p>
-                            <p class="mb-2"><span class="font-medium text-gray-700">Inner Text:</span> ${element.textContent}</p>
-                            <p class="mb-2"><span class="font-medium text-gray-700">Inner HTML:</span></p>
+                            <p class="font-semibold mb-2 text-gray-800">Match ${index + 1}</p>
+                            <p class="mb-2"><span class="font-medium text-gray-700">Inner Text</span> ${element.textContent}</p>
+                            <p class="mb-2"><span class="font-medium text-gray-700">Inner HTML</span></p>
                             <pre class="bg-gray-100 p-3 rounded-lg overflow-x-auto text-sm">${escapeHtml(element.innerHTML)}</pre>
-                            <p class="mb-2"><span class="font-medium text-gray-700">Outer HTML:</span></p>
+                            <p class="mb-2"><span class="font-medium text-gray-700">Outer HTML</span></p>
                             <pre class="bg-gray-100 p-3 rounded-lg overflow-x-auto text-sm">${escapeHtml(element.outerHTML)}</pre>
                         </div>
                     `;
