@@ -1,0 +1,235 @@
+<!-- v1.4 -->
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minify - JavaScript Minifier Tool</title>
+    <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
+    <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#006E81',
+                        'primary-dark': '#006E81',
+                        secondary: '#814000',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800">Minify</h1>
+            <p class="text-gray-600 text-center mt-1">JavaScript Minifier Tool</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Paste your JavaScript code in the text area below</li>
+                    <li>Click "Minify JavaScript" to compress your code</li>
+                    <li>The minified version will appear in the results section</li>
+                    <li>Use "Copy to Clipboard" to copy the minified code</li>
+                    <li>You can see statistics about the size reduction below the results</li>
+                </ol>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Input JavaScript</h2>
+            <textarea id="jsInput" class="w-full h-48 p-3 border border-gray-300 rounded-lg mb-4 resize-y" placeholder="Paste your JavaScript code here..."></textarea>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <button id="minifyButton" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">
+                    Minify JavaScript
+                </button>
+                <button id="clearButton" class="bg-secondary text-white px-4 py-2 rounded-lg">
+                    Clear All
+                </button>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Results</h2>
+            
+            <div id="resultsContainer" class="hidden">
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Minified JavaScript:</label>
+                        <button id="copyButton" class="bg-primary text-white text-sm px-3 py-1 rounded hover:bg-primary-dark transition duration-200">
+                            Copy to Clipboard
+                        </button>
+                    </div>
+                    <textarea id="minifiedOutput" class="w-full h-24 p-3 border border-gray-300 rounded-lg resize-y" readonly></textarea>
+                </div>
+                
+                <div id="stats" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h3 class="font-semibold text-gray-800 mb-2">Statistics</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Original Size</p>
+                            <p id="originalSize" class="font-medium text-gray-800">0 bytes</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Minified Size</p>
+                            <p id="minifiedSize" class="font-medium text-gray-800">0 bytes</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Reduction</p>
+                            <p id="reduction" class="font-medium text-gray-800">0%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <p class="text-gray-600 text-center">&copy; <a href="https://minisoft.it/" class="text-primary hover:text-primary-dark">Minisoft</a> — All rights reserved</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const jsInput = document.getElementById('jsInput');
+            const minifyButton = document.getElementById('minifyButton');
+            const clearButton = document.getElementById('clearButton');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const minifiedOutput = document.getElementById('minifiedOutput');
+            const copyButton = document.getElementById('copyButton');
+            const originalSizeElement = document.getElementById('originalSize');
+            const minifiedSizeElement = document.getElementById('minifiedSize');
+            const reductionElement = document.getElementById('reduction');
+            
+            // Minify button click handler
+            minifyButton.addEventListener('click', function() {
+                const jsCode = jsInput.value.trim();
+                
+                if (!jsCode) {
+                    return;
+                }
+                
+                try {
+                    const minified = minifyJavaScript(jsCode);
+                    displayResults(jsCode, minified);
+                } catch (error) {
+                    console.error('Minification error:', error);
+                }
+            });
+            
+            // JavaScript minifier function
+            function minifyJavaScript(code) {
+                try {
+                    // Simple minification: remove comments, whitespace, and newlines
+                    let minified = code;
+                    
+                    // Remove single-line comments
+                    minified = minified.replace(/\/\/.*$/gm, '');
+                    
+                    // Remove multi-line comments
+                    minified = minified.replace(/\/\*[\s\S]*?\*\//g, '');
+                    
+                    // Remove leading and trailing whitespace from each line
+                    minified = minified.replace(/^\s+|\s+$/gm, '');
+                    
+                    // Preserve necessary spaces for keywords
+                    const keywords = ['in', 'of', 'as', 'if', 'else', 'new', 'return', 'case', 'typeof', 'instanceof'];
+                    const keywordPattern = new RegExp('\\b(' + keywords.join('|') + ')\\b', 'g');
+                    
+                    // Temporarily mark spaces around keywords
+                    minified = minified.replace(new RegExp('(\\s)(' + keywords.join('|') + ')(\\s)', 'g'), '$1§$2§$3');
+                    
+                    // Remove whitespace between operators
+                    minified = minified.replace(/\s*([=+\-*/%&|^!<>:?]+)\s*/g, '$1');
+                    
+                    // Remove whitespace around parentheses, brackets and braces
+                    minified = minified.replace(/\s*([\(\)\{\}\[\]])\s*/g, '$1');
+                    
+                    // Remove whitespace after commas and semicolons
+                    minified = minified.replace(/([,;])\s+/g, '$1');
+                    
+                    // Remove unnecessary semicolons
+                    minified = minified.replace(/;;+/g, ';');
+                    
+                    // Convert multiple whitespace to single space
+                    minified = minified.replace(/\s+/g, ' ');
+                    
+                    // Restore keyword spacing
+                    minified = minified.replace(/§([a-z]+)§/g, '$1');
+                    
+                    // Special handling for certain keywords to ensure correctness
+                    keywords.forEach(keyword => {
+                        minified = minified.replace(new RegExp('([^a-zA-Z0-9_$])' + keyword + '([^a-zA-Z0-9_$])', 'g'), '$1 ' + keyword + ' $2');
+                        minified = minified.replace(new RegExp('^' + keyword + '([^a-zA-Z0-9_$])', 'g'), keyword + ' $1');
+                        minified = minified.replace(new RegExp('([^a-zA-Z0-9_$])' + keyword + '$', 'g'), '$1 ' + keyword);
+                    });
+                    
+                    // Remove all line breaks to create a single line
+                    minified = minified.replace(/[\r\n]+/g, '');
+                    
+                    // Fix any double spaces that might have been introduced
+                    minified = minified.replace(/\s{2,}/g, ' ');
+                    
+                    // Trim any remaining leading/trailing whitespace
+                    minified = minified.trim();
+                    
+                    return minified;
+                } catch (error) {
+                    console.error('Minification process error:', error);
+                    return code; // Return original code if minification fails
+                }
+            }
+            
+            // Display results function
+            function displayResults(originalCode, minifiedCode) {
+                // Update the minified output
+                minifiedOutput.value = minifiedCode;
+                resultsContainer.classList.remove('hidden');
+                
+                // Calculate statistics
+                const originalSize = originalCode.length;
+                const minifiedSize = minifiedCode.length;
+                const reduction = ((originalSize - minifiedSize) / originalSize * 100).toFixed(2);
+                
+                // Update statistics display
+                originalSizeElement.textContent = `${originalSize.toLocaleString()} bytes`;
+                minifiedSizeElement.textContent = `${minifiedSize.toLocaleString()} bytes`;
+                reductionElement.textContent = `${reduction}%`;
+            }
+            
+            // Copy button click handler
+            copyButton.addEventListener('click', function() {
+                minifiedOutput.select();
+                document.execCommand('copy');
+                
+                // Visual feedback
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 2000);
+            });
+            
+            // Clear button click handler
+            clearButton.addEventListener('click', function() {
+                jsInput.value = '';
+                minifiedOutput.value = '';
+                resultsContainer.classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
