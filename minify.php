@@ -109,14 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
                     ><?php echo htmlspecialchars($original); ?></textarea>
                 </div>
                 
-                <div class="flex justify-center">
-                    <button 
-                        type="submit" 
-                        class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200"
-                    >
-                        Minify Code
-                    </button>
-                </div>
+                <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">
+                    Minify Code
+                </button>
             </form>
         </div>
         
