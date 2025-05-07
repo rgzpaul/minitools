@@ -65,7 +65,7 @@ $self = basename(__FILE__);
                 foreach ($files as $file) {
                     $fileName = pathinfo($file, PATHINFO_FILENAME);
                     $filePath = htmlspecialchars($file);
-                    echo "<li class='text-center'><a href='$filePath' class='inline-block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-primary hover:bg-gray-50 transition duration-200'>$fileName</a></li>";
+                    echo "<li class='text-center'><a href='$filePath' class='inline-block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-primary hover:shadow-md hover:bg-gray-50 transition duration-200'>$fileName</a></li>";
                 }
             } else {
                 echo "<p class='text-center text-gray-700'>Could not open directory.</p>";
