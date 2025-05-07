@@ -1,6 +1,6 @@
 # Minisoft Web Tools Collection
 
-A collection of simple yet powerful web-based tools for various text and HTML manipulation tasks. These single-page applications run entirely in the browser with no server-side processing required (except tbodyExtr.php).
+A collection of simple yet powerful web-based tools for various text and HTML manipulation tasks. Some of these single-page applications run entirely in the browser with no server-side processing required.
 
 ## Tools Overview
 
@@ -36,6 +36,12 @@ PHP-based tool for extracting specific columns from HTML tables.
 - Select specific columns by index
 - Generate filtered table with only the selected columns
 
+### Minify
+PHP-based tool for minifying JavaScript code.
+- Compress JavaScript by removing unnecessary whitespace and comments
+- Reduce file size for faster loading
+- Transform double spaces into single spaces for cleaner output
+
 ### Bulkd
 Multi-URL File Downloader for batch downloading files.
 - Parse multiple URLs (one per line)
@@ -54,9 +60,6 @@ Bulk QR Code Generator for creating multiple QR codes at once.
 - Tailwind CSS
 - jQuery (for MagicTable)
 - QRCode-SVG, svg2pdf.js, and jsPDF libraries (for QR code generation)
-- PHP (for tBody Extractor only)
-
+- PHP
 ## Getting Started
-All tools (except tBody Extractor) can be run directly in the browser without server-side requirements. Simply open the HTML files in a modern web browser to use the tools.
-
-For tBody Extractor, a PHP-enabled server is required.
+Some tools can be run directly in the browser without server-side requirements. Simply open the HTML files in a modern web browser to use the tools. In some cases, a PHP-enabled server is required.
