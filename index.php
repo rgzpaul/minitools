@@ -1,4 +1,4 @@
-<!-- v1.6 -->
+<!-- v1.7 -->
 <?php
 // Directory to scan
 $directory = __DIR__;
@@ -34,7 +34,7 @@ $self = basename(__FILE__);
     <header class="bg-white border-b border-gray-200">
         <div class="container mx-auto px-4 py-6 max-w-6xl">
             <h1 class="text-3xl font-bold text-center text-gray-800">Minitools</h1>
-            <p class="text-gray-600 text-center mt-1">Utilities Collection <span class="opacity-50">v1.6</span></p>
+            <p class="text-gray-600 text-center mt-1">Utilities Collection <span class="opacity-50">v1.7</span></p>
         </div>
     </header>
 

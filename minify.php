@@ -1,4 +1,4 @@
-<!-- v1.6 -->
+<!-- v1.7 -->
 <?php
 // Process form submission
 $minified = '';
@@ -97,7 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
         
         <!-- Content -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Input Your JavaScript</h2>
             <form method="post">
                 <div>
                     <label for="js_code" class="block text-sm font-medium text-gray-700 mb-2">Paste your JavaScript code:</label>
