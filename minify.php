@@ -190,26 +190,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
     </footer>
     
     <script>
-        // Simple copy to clipboard function
-        document.addEventListener('DOMContentLoaded', function() {
-            const copyBtn = document.getElementById('copyBtn');
-            if (copyBtn) {
-                copyBtn.addEventListener('click', function() {
-                    const minifiedCode = document.getElementById('minified_code');
+    // Copy to clipboard function
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyBtn = document.getElementById('copyBtn');
+        const minifiedCode = document.getElementById('minified_code');
+
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function() {
+                if (minifiedCode) {
                     minifiedCode.select();
                     document.execCommand('copy');
-                    
+
                     // Change button text temporarily
                     const originalText = copyBtn.textContent;
                     copyBtn.textContent = 'Copied!';
-                    
+
                     // Reset button text after 2 seconds
                     setTimeout(function() {
                         copyBtn.textContent = originalText;
                     }, 2000);
-                });
-            }
-        });
+                }
+            });
+        }
+
+        // Prevent mouse wheel scrolling on the textarea but keep scrollbar usable
+        if (minifiedCode) {
+            minifiedCode.addEventListener('wheel', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+        }
+    });
     </script>
 </body>
 </html>
