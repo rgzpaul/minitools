@@ -190,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
     </footer>
     
     <script>
-    // Copy to clipboard function
+    // Simple copy to clipboard function
     document.addEventListener('DOMContentLoaded', function() {
         const copyBtn = document.getElementById('copyBtn');
         const minifiedCode = document.getElementById('minified_code');
@@ -213,12 +213,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
             });
         }
 
-        // Prevent mouse wheel scrolling on the textarea but keep scrollbar usable
-        if (minifiedCode) {
-            minifiedCode.addEventListener('wheel', function(e) {
+        // Prevent mouse wheel scrolling on all textareas
+        document.querySelectorAll('textarea').forEach(textarea => {
+            textarea.addEventListener('wheel', function(e) {
                 e.preventDefault();
             }, { passive: false });
-        }
+        });
     });
     </script>
 </body>
