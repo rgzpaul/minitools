@@ -87,30 +87,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
             <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
                 <ol class="list-decimal pl-5 space-y-1">
-                    <li>Paste your JavaScript code in the text area below</li>
-                    <li>Click "Minify Code" to compress your JavaScript</li>
-                    <li>Use the "Copy" button to copy the minified code to your clipboard</li>
-                    <li>See statistics about the size reduction</li>
+                    <li>Copy JavaScript code to your clipboard</li>
+                    <li>Click the "Minify" button to paste and minify your code</li>
+                    <li>Use the "Copy" button to copy the minified code</li>
                 </ol>
             </div>
         </div>
         
         <!-- Content -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <form method="post">
-                <div>
-                    <label for="js_code" class="block text-sm font-medium text-gray-700 mb-2">Paste your JavaScript code</label>
-                    <textarea 
-                        id="js_code" 
-                        name="js_code" 
-                        required 
-                        class="w-full h-64 p-3 border border-gray-300 rounded-lg mb-4 resize-y font-mono text-sm"
-                    ><?php echo htmlspecialchars($original); ?></textarea>
-                </div>
+            <form method="post" id="minifyForm">
+                <textarea 
+                    id="js_code" 
+                    name="js_code" 
+                    required 
+                    class="hidden"
+                ><?php echo htmlspecialchars($original); ?></textarea>
                 
-                <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">
-                    Minify Code
-                </button>
+                <div class="flex justify-center">
+                    <button 
+                        type="button" 
+                        id="pasteMinifyBtn" 
+                        class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200"
+                    >
+                        Minify
+                    </button>
+                </div>
             </form>
         </div>
         
@@ -140,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
         <?php endif; ?>
         
         <?php if ($minified): ?>
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-6" id="resultSection">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Minified Code</h2>
             
             <div class="relative mb-4">
@@ -190,36 +192,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
     </footer>
     
     <script>
-    // Simple copy to clipboard function
-    document.addEventListener('DOMContentLoaded', function() {
-        const copyBtn = document.getElementById('copyBtn');
-        const minifiedCode = document.getElementById('minified_code');
-
-        if (copyBtn) {
-            copyBtn.addEventListener('click', function() {
-                if (minifiedCode) {
-                    minifiedCode.select();
-                    document.execCommand('copy');
-
-                    // Change button text temporarily
-                    const originalText = copyBtn.textContent;
-                    copyBtn.textContent = 'Copied!';
-
-                    // Reset button text after 2 seconds
-                    setTimeout(function() {
-                        copyBtn.textContent = originalText;
-                    }, 2000);
+        document.addEventListener('DOMContentLoaded', function() {
+            const pasteMinifyBtn = document.getElementById('pasteMinifyBtn');
+            const jsCodeTextarea = document.getElementById('js_code');
+            const minifyForm = document.getElementById('minifyForm');
+            
+            // Clipboard paste and minify functionality
+            pasteMinifyBtn.addEventListener('click', async function() {
+                try {
+                    // Read from clipboard
+                    const clipboardText = await navigator.clipboard.readText();
+                    
+                    if (!clipboardText.trim()) {
+                        alert('Clipboard is empty. Please copy some JavaScript code first!');
+                        return;
+                    }
+                    
+                    // Set the textarea value
+                    jsCodeTextarea.value = clipboardText;
+                    
+                    // Submit the form
+                    minifyForm.submit();
+                } catch (err) {
+                    alert('Clipboard access error. Please ensure you have copied code to your clipboard.');
                 }
             });
-        }
-
-        // Prevent mouse wheel scrolling on all textareas
-        document.querySelectorAll('textarea').forEach(textarea => {
-            textarea.addEventListener('wheel', function(e) {
-                e.preventDefault();
-            }, { passive: false });
+            
+            // Copy to clipboard functionality
+            const copyBtn = document.getElementById('copyBtn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', function() {
+                    const minifiedCode = document.getElementById('minified_code');
+                    minifiedCode.select();
+                    
+                    try {
+                        // Modern clipboard API
+                        navigator.clipboard.writeText(minifiedCode.value)
+                            .then(() => {
+                                // Change button text temporarily
+                                const originalText = copyBtn.textContent;
+                                copyBtn.textContent = 'Copied!';
+                                
+                                // Reset button text after 2 seconds
+                                setTimeout(function() {
+                                    copyBtn.textContent = originalText;
+                                }, 2000);
+                            })
+                            .catch(err => {
+                                // Fallback to old method if clipboard API fails
+                                document.execCommand('copy');
+                                
+                                // Change button text temporarily
+                                const originalText = copyBtn.textContent;
+                                copyBtn.textContent = 'Copied!';
+                                
+                                // Reset button text after 2 seconds
+                                setTimeout(function() {
+                                    copyBtn.textContent = originalText;
+                                }, 2000);
+                            });
+                    } catch (err) {
+                        // Fallback to old method if clipboard API is not available
+                        document.execCommand('copy');
+                        
+                        // Change button text temporarily
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = 'Copied!';
+                        
+                        // Reset button text after 2 seconds
+                        setTimeout(function() {
+                            copyBtn.textContent = originalText;
+                        }, 2000);
+                    }
+                });
+            }
         });
-    });
     </script>
 </body>
 </html>
