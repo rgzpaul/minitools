@@ -1,4 +1,4 @@
-# Minisoft Web Tools Collection
+# Minisoft Web Tools Collection (v1.8)
 
 A collection of simple yet powerful web-based tools for various text and HTML manipulation tasks. Some of these single-page applications run entirely in the browser with no server-side processing required.
 
@@ -55,11 +55,19 @@ Bulk QR Code Generator for creating multiple QR codes at once.
 - Customize code size and margins
 - Download all codes as a PDF
 
+### GitComp
+GitHub Commit Comparison Tool for easily generating comparison URLs.
+- Create GitHub comparison URLs by specifying repository and commits
+- Compare between branches, tags, or specific commit hashes
+- Copy generated URLs to clipboard
+- Open comparisons directly in GitHub
+
 ## Technologies Used
 - HTML, CSS, JavaScript
 - Tailwind CSS
 - jQuery (for MagicTable)
 - QRCode-SVG, svg2pdf.js, and jsPDF libraries (for QR code generation)
 - PHP
+
 ## Getting Started
 Some tools can be run directly in the browser without server-side requirements. Simply open the HTML files in a modern web browser to use the tools. In some cases, a PHP-enabled server is required.
