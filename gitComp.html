@@ -1,0 +1,158 @@
+<!-- v1.7 -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitComp - GitHub Commit Comparator</title>
+    <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
+    <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#006E81',
+                        'primary-dark': '#006E81',
+                        secondary: '#814000',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800">GitComp</h1>
+            <p class="text-gray-600 text-center mt-1">GitHub Commit Comparison Tool</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Enter the repository name in the format "username/repo"</li>
+                    <li>Enter the base commit, branch, or tag (what you're comparing from)</li>
+                    <li>Enter the comparison commit, branch, or tag (what you're comparing to)</li>
+                    <li>Click "Generate URL" to create the GitHub comparison link</li>
+                    <li>Use the "Copy URL" button to copy the link to your clipboard</li>
+                    <li>Click "Open in GitHub" to view the comparison directly in GitHub</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Input Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <form id="compare-form" class="space-y-4">
+                <div>
+                    <label for="repo" class="block text-sm font-medium text-gray-700 mb-2">Repository (username/repo)</label>
+                    <input type="text" id="repo" placeholder="e.g. facebook/react" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="base-commit" class="block text-sm font-medium text-gray-700 mb-2">Base Commit/Branch/Tag</label>
+                        <input type="text" id="base-commit" placeholder="e.g. main, v1.0, or commit hash" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <label for="compare-commit" class="block text-sm font-medium text-gray-700 mb-2">Compare Commit/Branch/Tag</label>
+                        <input type="text" id="compare-commit" placeholder="e.g. develop, v2.0, or commit hash" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                    </div>
+                </div>
+                
+                <button type="submit" id="generateBtn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">
+                    Generate URL
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Results</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">GitHub Comparison URL</label>
+                    <div class="flex">
+                        <input type="text" id="result-url" readonly class="flex-grow p-3 border border-gray-300 rounded-l-lg bg-gray-50" />
+                        <button id="copy-button" class="bg-secondary text-white px-4 py-2 rounded-r-lg hover:bg-amber-700 transition duration-200">
+                            Copy URL
+                        </button>
+                    </div>
+                </div>
+                
+                <a id="open-link" href="#" target="_blank" class="block text-center bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">
+                    Open in GitHub
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-6xl">
+            <p class="text-gray-600 text-center">&copy; <a href="https://minisoft.it/" class="text-primary hover:text-primary-dark">Minisoft</a> — All rights reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const compareForm = document.getElementById('compare-form');
+            const repoInput = document.getElementById('repo');
+            const baseCommitInput = document.getElementById('base-commit');
+            const compareCommitInput = document.getElementById('compare-commit');
+            const resultUrl = document.getElementById('result-url');
+            const openLink = document.getElementById('open-link');
+            const copyButton = document.getElementById('copy-button');
+            const resultsSection = document.getElementById('results');
+            
+            compareForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate inputs
+                const repo = repoInput.value.trim();
+                const baseCommit = baseCommitInput.value.trim();
+                const compareCommit = compareCommitInput.value.trim();
+                
+                if (!repo || !baseCommit || !compareCommit) {
+                    alert('Please fill in all fields.');
+                    return;
+                }
+                
+                // Generate GitHub comparison URL
+                const comparisonUrl = `https://github.com/${repo}/compare/${baseCommit}...${compareCommit}`;
+                
+                // Update results
+                resultUrl.value = comparisonUrl;
+                openLink.href = comparisonUrl;
+                resultsSection.classList.remove('hidden');
+            });
+            
+            copyButton.addEventListener('click', function() {
+                resultUrl.select();
+                document.execCommand('copy');
+                
+                // Show copy feedback
+                const originalText = this.textContent;
+                this.textContent = 'Copied!';
+                this.classList.remove('bg-secondary', 'hover:bg-amber-700');
+                this.classList.add('bg-green-600', 'hover:bg-green-700');
+                
+                setTimeout(() => {
+                    this.textContent = originalText;
+                    this.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    this.classList.add('bg-secondary', 'hover:bg-amber-700');
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+
+</html>
