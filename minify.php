@@ -1,4 +1,4 @@
-<!-- v1.9 -->
+<!-- v2.0 -->
 <?php
 // Process form submission
 $minified = '';
