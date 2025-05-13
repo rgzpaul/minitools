@@ -1,4 +1,4 @@
-<!-- v1.8 -->
+<!-- v1.9 -->
 <?php
 // Process form submission
 $minified = '';
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['js_code'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minify - JavaScript Minifier</title>
+    <title>Minify</title>
     <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
     <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
     <script src="https://cdn.tailwindcss.com"></script>

@@ -1,4 +1,4 @@
-# Minisoft Web Tools Collection (v1.8)
+# Minisoft Web Tools Collection (v1.9)
 
 A collection of simple yet powerful web-based tools for various text and HTML manipulation tasks. Some of these single-page applications run entirely in the browser with no server-side processing required.
 
@@ -23,7 +23,7 @@ Real-time QR code generator that creates codes as you type.
 - Scales properly for mobile devices
 - Simple, clean interface
 
-### Extr (Range Extractor)
+### RangExtr
 Text Range Extractor for manipulating text by position.
 - Extract or remove specific character ranges from text
 - Process multiple lines at once
@@ -31,7 +31,7 @@ Text Range Extractor for manipulating text by position.
 - Real-time preview of selected text ranges
 
 ### tBody Extractor
-PHP-based tool for extracting specific columns from HTML tables.
+Tool for extracting specific columns from HTML tables.
 - Process tbody HTML content
 - Select specific columns by index
 - Generate filtered table with only the selected columns
@@ -71,3 +71,16 @@ GitHub Commit Comparison Tool for easily generating comparison URLs.
 
 ## Getting Started
 Some tools can be run directly in the browser without server-side requirements. Simply open the HTML files in a modern web browser to use the tools. In some cases, a PHP-enabled server is required.
+
+## JavaScript-Based Tools
+- ContentExtr
+- MagicTable
+- QRGen
+- rangExtr
+- tBody Extractor
+- Bulkd
+- Bulkr
+- GitComp
+
+## PHP-Based Tools
+- Minify
