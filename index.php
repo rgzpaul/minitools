@@ -32,7 +32,7 @@ $self = basename(__FILE__);
 
 <body class="bg-gray-100 flex flex-col min-h-screen">
     <header class="bg-white border-b border-gray-200">
-        <div class="container mx-auto px-4 py-6 max-w-6xl">
+        <div class="container mx-auto px-4 py-6 max-w-4xl">
             <h1 class="text-3xl font-bold text-center text-gray-800">Minitools</h1>
             <p class="text-gray-600 text-center mt-1">Utilities Collection <span class="opacity-50">v2.0</span></p>
         </div>
@@ -75,7 +75,7 @@ $self = basename(__FILE__);
     </main>
 
     <footer class="bg-white border-t border-gray-200 mt-auto">
-        <div class="container mx-auto px-4 py-6 max-w-6xl">
+        <div class="container mx-auto px-4 py-6 max-w-4xl">
             <p class="text-gray-600 text-center">&copy; <a href="https://minisoft.it/" class="text-primary hover:text-primary-dark">Minisoft</a> — All rights reserved</p>
         </div>
     </footer>
