@@ -83,6 +83,7 @@ Some tools can be run directly in the browser without server-side requirements. 
 ## JavaScript-Based Tools
 - ContentExtr
 - MagicTable
+- tabParse
 - QRGen
 - rangExtr
 - tBody Extractor
