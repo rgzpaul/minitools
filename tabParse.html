@@ -1,0 +1,360 @@
+<!-- v2.0 -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataParser</title>
+    <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
+    <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#006E81',
+                        'primary-dark': '#006E81',
+                        secondary: '#814000',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-4xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800">DataParser</h1>
+            <p class="text-gray-600 text-center mt-1">Transform Tabular Data into Interactive Tables</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-4xl flex-grow">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Paste your tabular data in the input area below (tab-separated, CSV, or custom delimiter).</li>
+                    <li>Select the appropriate delimiter or let the system auto-detect it.</li>
+                    <li>Click "Parse Data" to generate an interactive table with sorting and filtering.</li>
+                    <li>Use the search box to filter data across all columns.</li>
+                    <li>Click column headers to sort data in ascending/descending order.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="space-y-4">
+                <div>
+                    <label for="dataInput" class="block text-sm font-medium text-gray-700 mb-2">Paste your tabular data here</label>
+                    <textarea id="dataInput" class="w-full h-40 p-3 border border-gray-300 rounded-lg resize-y" 
+                              placeholder="Paste your data here... (tab-separated, comma-separated, or custom delimiter)" required></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Choose delimiter</label>
+                    <div class="flex flex-wrap gap-6 py-2">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="delimiter" value="tab" checked class="h-4 w-4 text-primary border-gray-300">
+                            <span class="ml-2 text-sm text-gray-700">Tab</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="delimiter" value="comma" class="h-4 w-4 text-primary border-gray-300">
+                            <span class="ml-2 text-sm text-gray-700">Comma</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="delimiter" value="semicolon" class="h-4 w-4 text-primary border-gray-300">
+                            <span class="ml-2 text-sm text-gray-700">Semicolon</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="delimiter" value="pipe" class="h-4 w-4 text-primary border-gray-300">
+                            <span class="ml-2 text-sm text-gray-700">Pipe (|)</span>
+                        </label>
+                        <div class="inline-flex items-center gap-2">
+                            <input type="radio" name="delimiter" value="custom" class="h-4 w-4 text-primary border-gray-300">
+                            <span class="text-sm text-gray-700">Custom:</span>
+                            <input type="text" id="customDelimText" placeholder="Delimiter" maxlength="5" 
+                                   class="w-20 p-2 border border-gray-300 rounded text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="parseBtn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">
+                    Parse Data
+                </button>
+            </div>
+
+            <div id="result" class="mt-8 hidden">
+                <h2 class="text-xl font-semibold text-primary mb-4 text-left">Interactive Data Table</h2>
+                
+                <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                    <div class="flex-1">
+                        <input type="text" id="searchBox" placeholder="🔍 Search in table..." 
+                               class="w-full p-3 border border-gray-300 rounded-lg">
+                    </div>
+                    <div class="flex items-center text-sm text-gray-600" id="tableStats"></div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table id="dataTable" class="min-w-full divide-y divide-gray-200">
+                        <thead id="tableHead" class="bg-primary">
+                            <!-- Headers will be added here by JavaScript -->
+                        </thead>
+                        <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Table data will be added here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-4xl">
+            <p class="text-gray-600 text-center">&copy; <a href="https://minisoft.it/" class="text-primary hover:text-primary-dark">Minisoft</a> — All rights reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        let originalData = [];
+        let filteredData = [];
+        let currentSort = { column: -1, direction: 'asc' };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const parseBtn = document.getElementById('parseBtn');
+            const dataInput = document.getElementById('dataInput');
+            const searchBox = document.getElementById('searchBox');
+            const customDelimText = document.getElementById('customDelimText');
+            
+            // Load sample data
+            const sampleData = `Domini	Diagnostica	Cartella di root	Git	Log separati	Firewall	CDN	SSL
+                a1.minihost.it	A AAAA	www	Disattivo	Disattivato	Disattivato	Disattivato	Attivato
+                a2.minihost.it	A AAAA	swsites/alex-mucci.com/www	Disattivo	Disattivato	Disattivato	Attivato	Attivato
+                a3.minihost.it	A AAAA	swsites/alexismucci.com/www	Disattivo	Disattivato	Disattivato	Attivato	Attivato`;
+            dataInput.value = sampleData;
+
+            parseBtn.addEventListener('click', parseData);
+            searchBox.addEventListener('input', filterTable);
+            
+            // Auto-select custom delimiter input when radio is selected
+            document.querySelector('input[name="delimiter"][value="custom"]').addEventListener('change', function() {
+                if (this.checked) {
+                    customDelimText.focus();
+                }
+            });
+
+            // Auto-select custom radio when typing in custom delimiter
+            customDelimText.addEventListener('input', function() {
+                document.querySelector('input[name="delimiter"][value="custom"]').checked = true;
+            });
+        });
+
+        function detectDelimiter(text) {
+            const lines = text.trim().split('\n').slice(0, 5);
+            const delimiters = {
+                '\t': 'tab',
+                ',': 'comma',
+                ';': 'semicolon',
+                '|': 'pipe'
+            };
+
+            let bestDelimiter = '\t';
+            let maxConsistency = 0;
+
+            for (const [delim, name] of Object.entries(delimiters)) {
+                const counts = lines.map(line => (line.match(new RegExp(delim.replace('|', '\\|'), 'g')) || []).length);
+                const avgCount = counts.reduce((a, b) => a + b, 0) / counts.length;
+                const consistency = avgCount > 0 ? 1 - (Math.max(...counts) - Math.min(...counts)) / Math.max(...counts) : 0;
+                
+                if (avgCount > 0 && consistency > maxConsistency) {
+                    maxConsistency = consistency;
+                    bestDelimiter = delim;
+                }
+            }
+
+            return bestDelimiter;
+        }
+
+        function parseData() {
+            const input = document.getElementById('dataInput').value.trim();
+            if (!input) {
+                alert('Please paste some data first!');
+                return;
+            }
+
+            const delimiterType = document.querySelector('input[name="delimiter"]:checked').value;
+            let delimiter;
+
+            switch (delimiterType) {
+                case 'tab':
+                    delimiter = '\t';
+                    break;
+                case 'comma':
+                    delimiter = ',';
+                    break;
+                case 'semicolon':
+                    delimiter = ';';
+                    break;
+                case 'pipe':
+                    delimiter = '|';
+                    break;
+                case 'custom':
+                    delimiter = document.getElementById('customDelimText').value;
+                    if (!delimiter) {
+                        alert('Please enter a custom delimiter!');
+                        return;
+                    }
+                    break;
+                default:
+                    delimiter = detectDelimiter(input);
+            }
+
+            try {
+                const lines = input.split('\n').filter(line => line.trim());
+                if (lines.length === 0) {
+                    throw new Error('No data found');
+                }
+
+                const data = lines.map(line => line.split(delimiter).map(cell => cell.trim()));
+                
+                // Validate data consistency
+                const maxColumns = Math.max(...data.map(row => row.length));
+                const normalizedData = data.map(row => {
+                    while (row.length < maxColumns) {
+                        row.push('');
+                    }
+                    return row;
+                });
+
+                originalData = normalizedData;
+                filteredData = [...originalData];
+                
+                renderTable();
+                document.getElementById('result').classList.remove('hidden');
+
+            } catch (error) {
+                alert('Error parsing data: ' + error.message + '\nPlease check your data format and delimiter choice.');
+            }
+        }
+
+        function renderTable() {
+            const tableHead = document.getElementById('tableHead');
+            const tableBody = document.getElementById('tableBody');
+
+            if (filteredData.length === 0) {
+                tableHead.innerHTML = '';
+                tableBody.innerHTML = '<tr><td colspan="100%" class="px-6 py-4 text-center text-gray-500 italic">No data to display</td></tr>';
+                return;
+            }
+
+            // Create header
+            const headers = filteredData[0];
+            tableHead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            
+            headers.forEach((header, index) => {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer user-select-none';
+                th.textContent = header || `Column ${index + 1}`;
+                th.onclick = () => sortTable(index);
+                
+                if (currentSort.column === index) {
+                    th.innerHTML += currentSort.direction === 'asc' ? ' ↑' : ' ↓';
+                } else {
+                    th.innerHTML += ' ↕';
+                }
+                
+                headerRow.appendChild(th);
+            });
+            tableHead.appendChild(headerRow);
+
+            // Create body
+            tableBody.innerHTML = '';
+            const dataRows = filteredData.slice(1);
+            
+            dataRows.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                if (rowIndex % 2 === 0) {
+                    tr.className = 'bg-gray-50';
+                }
+                tr.className += ' hover:bg-blue-50 transition-colors duration-150';
+                
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+
+            updateStats();
+        }
+
+        function sortTable(columnIndex) {
+            if (currentSort.column === columnIndex) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = columnIndex;
+                currentSort.direction = 'asc';
+            }
+
+            const header = filteredData[0];
+            const dataRows = filteredData.slice(1);
+
+            dataRows.sort((a, b) => {
+                const aVal = a[columnIndex] || '';
+                const bVal = b[columnIndex] || '';
+
+                // Try to compare as numbers first
+                const aNum = parseFloat(aVal);
+                const bNum = parseFloat(bVal);
+
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return currentSort.direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+
+                // Compare as strings
+                const comparison = aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' });
+                return currentSort.direction === 'asc' ? comparison : -comparison;
+            });
+
+            filteredData = [header, ...dataRows];
+            renderTable();
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            
+            if (!searchTerm) {
+                filteredData = [...originalData];
+            } else {
+                const header = originalData[0];
+                const dataRows = originalData.slice(1);
+                
+                const matchingRows = dataRows.filter(row => 
+                    row.some(cell => cell.toLowerCase().includes(searchTerm))
+                );
+                
+                filteredData = [header, ...matchingRows];
+            }
+
+            // Reset sorting when filtering
+            currentSort = { column: -1, direction: 'asc' };
+            renderTable();
+        }
+
+        function updateStats() {
+            const stats = document.getElementById('tableStats');
+            const totalRows = Math.max(0, filteredData.length - 1); // Exclude header
+            const totalCols = filteredData.length > 0 ? filteredData[0].length : 0;
+            stats.textContent = `${totalRows} rows × ${totalCols} columns`;
+        }
+    </script>
+</body>
+
+</html>

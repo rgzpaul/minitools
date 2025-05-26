@@ -17,6 +17,14 @@ Interactive HTML table processor with filtering and sorting capabilities.
 - Filter table rows by included or excluded text
 - Sort columns by clicking on headers
 
+### tabParse
+Transform tabular data into interactive, sortable tables with filtering capabilities.
+- Parse tab-separated, CSV, semicolon, pipe, or custom delimiter data
+- Auto-detect delimiter format for intelligent parsing
+- Interactive table with sortable columns and real-time search filtering
+- Responsive design that works on desktop and mobile
+- Live statistics showing filtered vs total rows
+
 ### QRGen
 Real-time QR code generator that creates codes as you type.
 - Instantly generates QR codes from any text input
