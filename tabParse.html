@@ -96,7 +96,7 @@
             
             <div class="flex flex-col sm:flex-row gap-4 mb-4">
                 <div class="flex-1">
-                    <input type="text" id="searchBox" placeholder="🔍 Search in table..." 
+                    <input type="text" id="searchBox" placeholder="Search in table..." 
                            class="w-full p-3 border border-gray-300 rounded-lg">
                 </div>
                 <div class="flex items-center text-sm text-gray-600" id="tableStats"></div>
@@ -260,7 +260,7 @@ a3.minihost.it	A AAAA	swsites/alexismucci.com/www	Disattivo	Disattivato	Disattiv
             
             headers.forEach((header, index) => {
                 const th = document.createElement('th');
-                th.className = 'px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer user-select-none';
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap cursor-pointer';
                 th.textContent = header || `Column ${index + 1}`;
                 th.onclick = () => sortTable(index);
                 
