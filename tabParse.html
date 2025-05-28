@@ -5,9 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataParser</title>
+    <title>tabParse</title>
     <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
     <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -22,17 +23,31 @@
             }
         }
     </script>
+    <style>
+        .sort-asc::after {
+            content: ' ↑';
+            color: white;
+        }
+        .sort-desc::after {
+            content: ' ↓';  
+            color: white;
+        }
+        .sortable:not(.sort-asc):not(.sort-desc)::after {
+            content: ' ↕';
+            color: white;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100 flex flex-col min-h-screen">
     <header class="bg-white border-b border-gray-200">
         <div class="container mx-auto px-4 py-6 max-w-4xl">
-            <h1 class="text-3xl font-bold text-center text-gray-800">DataParser</h1>
+            <h1 class="text-3xl font-bold text-center text-gray-800">tabParse</h1>
             <p class="text-gray-600 text-center mt-1">Transform Tabular Data into Interactive Tables</p>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-8 max-w-4xl flex-grow">
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
         <!-- Instructions Section -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
@@ -41,7 +56,8 @@
                     <li>Paste your tabular data in the input area below (tab-separated, CSV, or custom delimiter).</li>
                     <li>Select the appropriate delimiter or let the system auto-detect it.</li>
                     <li>Click "Parse Data" to generate an interactive table with sorting and filtering.</li>
-                    <li>Use the search box to filter data across all columns.</li>
+                    <li>Select which columns you want to include in the final table.</li>
+                    <li>Use the advanced filtering options to include or exclude specific content.</li>
                     <li>Click column headers to sort data in ascending/descending order.</li>
                 </ol>
             </div>
@@ -90,16 +106,40 @@
             </form>
         </div>
 
+        <!-- Column Selection -->
+        <div id="columnSelection" class="bg-white rounded-lg shadow-md p-6 mb-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Select Columns to Include</h2>
+            <div class="space-y-4">
+                <div id="columnCheckboxes" class="space-y-2"></div>
+                <div class="flex gap-4">
+                    <button id="selectAll" class="text-sm text-primary hover:text-primary-dark transition duration-200">Select All</button>
+                    <button id="deselectAll" class="text-sm text-primary hover:text-primary-dark transition duration-200">Deselect All</button>
+                </div>
+                <button id="generateTableBtn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200">Generate Table</button>
+            </div>
+        </div>
+
         <!-- Results Section -->
         <div id="result" class="bg-white rounded-lg shadow-md p-6 hidden">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Interactive Data Table</h2>
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Results</h2>
             
-            <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                <div class="flex-1">
-                    <input type="text" id="searchBox" placeholder="Search in table..." 
-                           class="w-full p-3 border border-gray-300 rounded-lg">
+            <div class="space-y-4 mb-4">
+                <div class="text-sm text-gray-600">
+                    Showing <span id="filteredCount">0</span> of <span id="totalCount">0</span> rows
                 </div>
-                <div class="flex items-center text-sm text-gray-600" id="tableStats"></div>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Only show rows containing</label>
+                        <input type="text" id="filterInput" placeholder="Filter content..." class="w-full p-3 border border-gray-300 rounded-lg">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Exclude rows containing</label>
+                        <input type="text" id="excludeInput" placeholder="Content to exclude..." class="w-full p-3 border border-gray-300 rounded-lg">
+                    </div>
+                    <div class="flex items-end">
+                        <button id="resetFilters" class="text-sm text-primary hover:text-primary-dark transition duration-200 px-3 py-1">Reset Filters</button>
+                    </div>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -124,34 +164,38 @@
     <script>
         let originalData = [];
         let filteredData = [];
+        let selectedColumns = [];
         let currentSort = { column: -1, direction: 'asc' };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const parseBtn = document.getElementById('parseBtn');
-            const dataInput = document.getElementById('dataInput');
-            const searchBox = document.getElementById('searchBox');
-            const customDelimText = document.getElementById('customDelimText');
-            
+        $(document).ready(function() {
             // Load sample data
-            const sampleData = `Domini	Diagnostica	Cartella di root	Git	Log separati	Firewall	CDN	SSL
-a1.minihost.it	A AAAA	www	Disattivo	Disattivato	Disattivato	Disattivato	Attivato
-a2.minihost.it	A AAAA	swsites/alex-mucci.com/www	Disattivo	Disattivato	Disattivato	Attivato	Attivato
-a3.minihost.it	A AAAA	swsites/alexismucci.com/www	Disattivo	Disattivato	Disattivato	Attivato	Attivato`;
-            dataInput.value = sampleData;
+            const sampleData = `Company	Contact	Country
+Alfreds Futterkiste	Maria Anders	Germany
+Centro comercial Moctezuma	Francisco Chang	Mexico
+Ernst Handel	Roland Mendel	Austria
+Island Trading	Helen Bennett	UK
+Laughing Bacchus Winecellars	Yoshi Tannamuri	Canada
+Magazzini Alimentari Riuniti	Giovanni Rovelli	Italy`;
+            $('#dataInput').val(sampleData);
 
-            parseBtn.addEventListener('click', parseData);
-            searchBox.addEventListener('input', filterTable);
-            
+            // Event listeners
+            $('#parseBtn').on('click', parseData);
+            $('#selectAll').on('click', () => $('#columnCheckboxes input[type="checkbox"]').prop('checked', true));
+            $('#deselectAll').on('click', () => $('#columnCheckboxes input[type="checkbox"]').prop('checked', false));
+            $('#generateTableBtn').on('click', generateTable);
+            $('#filterInput, #excludeInput').on('input', applyFilters);
+            $('#resetFilters').on('click', resetFilters);
+
             // Auto-select custom delimiter input when radio is selected
-            document.querySelector('input[name="delimiter"][value="custom"]').addEventListener('change', function() {
+            $('input[name="delimiter"][value="custom"]').on('change', function() {
                 if (this.checked) {
-                    customDelimText.focus();
+                    $('#customDelimText').focus();
                 }
             });
 
             // Auto-select custom radio when typing in custom delimiter
-            customDelimText.addEventListener('input', function() {
-                document.querySelector('input[name="delimiter"][value="custom"]').checked = true;
+            $('#customDelimText').on('input', function() {
+                $('input[name="delimiter"][value="custom"]').prop('checked', true);
             });
         });
 
@@ -182,13 +226,13 @@ a3.minihost.it	A AAAA	swsites/alexismucci.com/www	Disattivo	Disattivato	Disattiv
         }
 
         function parseData() {
-            const input = document.getElementById('dataInput').value.trim();
+            const input = $('#dataInput').val().trim();
             if (!input) {
                 alert('Please paste some data first!');
                 return;
             }
 
-            const delimiterType = document.querySelector('input[name="delimiter"]:checked').value;
+            const delimiterType = $('input[name="delimiter"]:checked').val();
             let delimiter;
 
             switch (delimiterType) {
@@ -205,7 +249,7 @@ a3.minihost.it	A AAAA	swsites/alexismucci.com/www	Disattivo	Disattivato	Disattiv
                     delimiter = '|';
                     break;
                 case 'custom':
-                    delimiter = document.getElementById('customDelimText').value;
+                    delimiter = $('#customDelimText').val();
                     if (!delimiter) {
                         alert('Please enter a custom delimiter!');
                         return;
@@ -233,68 +277,109 @@ a3.minihost.it	A AAAA	swsites/alexismucci.com/www	Disattivo	Disattivato	Disattiv
                 });
 
                 originalData = normalizedData;
-                filteredData = [...originalData];
-                
-                renderTable();
-                document.getElementById('result').classList.remove('hidden');
+                showColumnSelection();
 
             } catch (error) {
                 alert('Error parsing data: ' + error.message + '\nPlease check your data format and delimiter choice.');
             }
         }
 
+        function showColumnSelection() {
+            if (originalData.length === 0) return;
+
+            const headers = originalData[0];
+            const checkboxesDiv = $('#columnCheckboxes').empty();
+
+            headers.forEach((header, index) => {
+                const checkbox = $('<div>').addClass('flex items-center gap-2')
+                    .append(
+                        $('<input>')
+                        .attr('type', 'checkbox')
+                        .attr('id', `col-${index}`)
+                        .attr('checked', true)
+                        .addClass('h-4 w-4 text-primary border-gray-300 rounded')
+                    )
+                    .append(
+                        $('<label>')
+                        .attr('for', `col-${index}`)
+                        .text(header || `Column ${index + 1}`)
+                        .addClass('text-sm text-gray-700')
+                    );
+
+                checkboxesDiv.append(checkbox);
+            });
+
+            $('#columnSelection').removeClass('hidden');
+            $('#result').addClass('hidden');
+        }
+
+        function generateTable() {
+            selectedColumns = [];
+            $('#columnCheckboxes input[type="checkbox"]').each(function(index) {
+                if ($(this).is(':checked')) {
+                    selectedColumns.push(index);
+                }
+            });
+
+            if (selectedColumns.length === 0) {
+                alert('Please select at least one column');
+                return;
+            }
+
+            // Filter original data to include only selected columns
+            filteredData = originalData.map(row => 
+                selectedColumns.map(colIndex => row[colIndex] || '')
+            );
+
+            renderTable();
+            $('#result').removeClass('hidden');
+        }
+
         function renderTable() {
-            const tableHead = document.getElementById('tableHead');
-            const tableBody = document.getElementById('tableBody');
+            const tableHead = $('#tableHead');
+            const tableBody = $('#tableBody');
 
             if (filteredData.length === 0) {
-                tableHead.innerHTML = '';
-                tableBody.innerHTML = '<tr><td colspan="100%" class="px-6 py-4 text-center text-gray-500 italic">No data to display</td></tr>';
+                tableHead.html('');
+                tableBody.html('<tr><td colspan="100%" class="px-6 py-4 text-center text-gray-500 italic">No data to display</td></tr>');
                 return;
             }
 
             // Create header
             const headers = filteredData[0];
-            tableHead.innerHTML = '';
-            const headerRow = document.createElement('tr');
+            tableHead.html('');
+            const headerRow = $('<tr>');
             
             headers.forEach((header, index) => {
-                const th = document.createElement('th');
-                th.className = 'px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap cursor-pointer';
-                th.textContent = header || `Column ${index + 1}`;
-                th.onclick = () => sortTable(index);
+                const th = $('<th>')
+                    .addClass('px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap cursor-pointer sortable')
+                    .text(header || `Column ${index + 1}`)
+                    .on('click', () => sortTable(index));
                 
-                if (currentSort.column === index) {
-                    th.innerHTML += currentSort.direction === 'asc' ? ' ↑' : ' ↓';
-                } else {
-                    th.innerHTML += ' ↕';
-                }
-                
-                headerRow.appendChild(th);
+                headerRow.append(th);
             });
-            tableHead.appendChild(headerRow);
+            tableHead.append(headerRow);
 
             // Create body
-            tableBody.innerHTML = '';
+            tableBody.html('');
             const dataRows = filteredData.slice(1);
             
             dataRows.forEach((row, rowIndex) => {
-                const tr = document.createElement('tr');
+                const tr = $('<tr>').addClass('hover:bg-blue-50 transition-colors duration-150');
                 if (rowIndex % 2 === 0) {
-                    tr.className = 'bg-gray-50';
+                    tr.addClass('bg-gray-50');
                 }
-                tr.className += ' hover:bg-blue-50 transition-colors duration-150';
                 
                 row.forEach(cell => {
-                    const td = document.createElement('td');
-                    td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
-                    td.textContent = cell;
-                    tr.appendChild(td);
+                    const td = $('<td>')
+                        .addClass('px-6 py-4 whitespace-nowrap text-sm text-gray-900')
+                        .text(cell);
+                    tr.append(td);
                 });
-                tableBody.appendChild(tr);
+                tableBody.append(tr);
             });
 
-            updateStats();
+            updateCounts();
         }
 
         function sortTable(columnIndex) {
@@ -327,34 +412,37 @@ a3.minihost.it	A AAAA	swsites/alexismucci.com/www	Disattivo	Disattivato	Disattiv
 
             filteredData = [header, ...dataRows];
             renderTable();
-        }
-
-        function filterTable() {
-            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
             
-            if (!searchTerm) {
-                filteredData = [...originalData];
-            } else {
-                const header = originalData[0];
-                const dataRows = originalData.slice(1);
-                
-                const matchingRows = dataRows.filter(row => 
-                    row.some(cell => cell.toLowerCase().includes(searchTerm))
-                );
-                
-                filteredData = [header, ...matchingRows];
-            }
-
-            // Reset sorting when filtering
-            currentSort = { column: -1, direction: 'asc' };
-            renderTable();
+            // Reapply sort class after table is rendered
+            $('#tableHead th').removeClass('sort-asc sort-desc');
+            $('#tableHead th').eq(columnIndex).addClass(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
         }
 
-        function updateStats() {
-            const stats = document.getElementById('tableStats');
-            const totalRows = Math.max(0, filteredData.length - 1); // Exclude header
-            const totalCols = filteredData.length > 0 ? filteredData[0].length : 0;
-            stats.textContent = `${totalRows} rows × ${totalCols} columns`;
+        function applyFilters() {
+            const includeText = $('#filterInput').val().toLowerCase();
+            const excludeText = $('#excludeInput').val().toLowerCase();
+
+            $('#dataTable tbody tr').each(function() {
+                const row = $(this);
+                const text = row.text().toLowerCase();
+                const includeMatch = includeText === '' || text.includes(includeText);
+                const excludeMatch = excludeText !== '' && text.includes(excludeText);
+                row.toggle(includeMatch && !excludeMatch);
+            });
+
+            updateCounts();
+        }
+
+        function resetFilters() {
+            $('#filterInput, #excludeInput').val('');
+            applyFilters();
+        }
+
+        function updateCounts() {
+            const total = $('#dataTable tbody tr').length;
+            const visible = $('#dataTable tbody tr:visible').length;
+            $('#totalCount').text(total);
+            $('#filteredCount').text(visible);
         }
     </script>
 </body>

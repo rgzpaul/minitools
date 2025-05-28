@@ -23,6 +23,20 @@
             }
         }
     </script>
+    <style>
+        .sort-asc::after {
+            content: ' ↑';
+            color: white;
+        }
+        .sort-desc::after {
+            content: ' ↓';  
+            color: white;
+        }
+        .sortable:not(.sort-asc):not(.sort-desc)::after {
+            content: ' ↕';
+            color: white;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100 flex flex-col min-h-screen">
@@ -113,6 +127,46 @@
             let originalTable = null;
             let columnHeaders = [];
 
+            // Load sample HTML table data
+            const sampleTableHtml = `<table>
+  <tr>
+    <th>Company</th>
+    <th>Contact</th>
+    <th>Country</th>
+  </tr>
+  <tr>
+    <td>Alfreds Futterkiste</td>
+    <td>Maria Anders</td>
+    <td>Germany</td>
+  </tr>
+  <tr>
+    <td>Centro comercial Moctezuma</td>
+    <td>Francisco Chang</td>
+    <td>Mexico</td>
+  </tr>
+  <tr>
+    <td>Ernst Handel</td>
+    <td>Roland Mendel</td>
+    <td>Austria</td>
+  </tr>
+  <tr>
+    <td>Island Trading</td>
+    <td>Helen Bennett</td>
+    <td>UK</td>
+  </tr>
+  <tr>
+    <td>Laughing Bacchus Winecellars</td>
+    <td>Yoshi Tannamuri</td>
+    <td>Canada</td>
+  </tr>
+  <tr>
+    <td>Magazzini Alimentari Riuniti</td>
+    <td>Giovanni Rovelli</td>
+    <td>Italy</td>
+  </tr>
+</table>`;
+            $('#tableInput').val(sampleTableHtml);
+
             $('#analyzeButton').on('click', function() {
                 const tableHtml = $('#tableInput').val();
 
@@ -189,12 +243,38 @@
                     table.find(`th:eq(${columnIndex}), td:nth-child(${columnIndex + 1})`).remove();
                 }
 
-                table.addClass('min-w-full divide-y divide-gray-200');
-                table.find('thead').addClass('bg-gray-50');
-                table.find('tbody').addClass('divide-y divide-gray-200');
+                // Ensure proper table structure with thead and tbody
+                if (table.find('thead').length === 0) {
+                    // Move first row with th elements to thead
+                    const headerRow = table.find('tr').first();
+                    if (headerRow.find('th').length > 0) {
+                        const thead = $('<thead>').append(headerRow);
+                        table.prepend(thead);
+                    }
+                }
 
-                table.find('th').addClass('px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer');
+                // Ensure tbody exists for data rows
+                if (table.find('tbody').length === 0) {
+                    const dataRows = table.find('tr').has('td');
+                    const tbody = $('<tbody>').append(dataRows);
+                    table.append(tbody);
+                }
+
+                // Apply tabParse styling
+                table.addClass('min-w-full divide-y divide-gray-200');
+                table.find('thead').addClass('bg-primary');
+                table.find('tbody').addClass('bg-white divide-y divide-gray-200');
+
+                table.find('th').addClass('px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap cursor-pointer sortable');
                 table.find('td').addClass('px-6 py-4 whitespace-nowrap text-sm text-gray-900');
+
+                // Add alternating row colors and hover effects like tabParse
+                table.find('tbody tr').each(function(index) {
+                    const tr = $(this).addClass('hover:bg-blue-50 transition-colors duration-150');
+                    if (index % 2 === 0) {
+                        tr.addClass('bg-gray-50');
+                    }
+                });
 
                 $('#processedTable').html(table);
                 updateCounts();
@@ -204,12 +284,20 @@
             function bindEvents() {
                 $('#processedTable th').on('click', function() {
                     const column = $(this).index();
-                    const asc = !$(this).hasClass('sort-asc');
-
+                    const currentSort = $(this).hasClass('sort-asc') ? 'asc' : 
+                                      $(this).hasClass('sort-desc') ? 'desc' : 'none';
+                    
+                    // Remove sort classes from all headers
                     $('#processedTable th').removeClass('sort-asc sort-desc');
-                    $(this).addClass(asc ? 'sort-asc' : 'sort-desc');
-
-                    sortTable(column, asc);
+                    
+                    // Apply new sort class
+                    if (currentSort === 'none' || currentSort === 'desc') {
+                        $(this).addClass('sort-asc');
+                        sortTable(column, true);
+                    } else {
+                        $(this).addClass('sort-desc');
+                        sortTable(column, false);
+                    }
                 });
 
                 // Combined filtering
@@ -246,18 +334,28 @@
                     const aText = $(a).find('td').eq(column).text().toLowerCase();
                     const bText = $(b).find('td').eq(column).text().toLowerCase();
 
-                    if (!isNaN(aText) && !isNaN(bText)) {
-                        return asc ?
-                            Number(aText) - Number(bText) :
-                            Number(bText) - Number(aText);
+                    // Try to compare as numbers first
+                    const aNum = parseFloat(aText);
+                    const bNum = parseFloat(bText);
+
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        return asc ? aNum - bNum : bNum - aNum;
                     }
 
-                    return asc ?
-                        aText.localeCompare(bText) :
-                        bText.localeCompare(aText);
+                    // Compare as strings with locale-aware comparison
+                    const comparison = aText.localeCompare(bText, undefined, { numeric: true, sensitivity: 'base' });
+                    return asc ? comparison : -comparison;
                 });
 
                 tbody.empty().append(rows);
+                
+                // Reapply alternating row colors after sorting
+                tbody.find('tr').each(function(index) {
+                    $(this).removeClass('bg-gray-50');
+                    if (index % 2 === 0) {
+                        $(this).addClass('bg-gray-50');
+                    }
+                });
             }
 
             function updateCounts() {
