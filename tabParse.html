@@ -76,7 +76,11 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Choose delimiter</label>
                     <div class="flex flex-wrap gap-6 py-2">
                         <label class="inline-flex items-center">
-                            <input type="radio" name="delimiter" value="tab" checked class="h-4 w-4 text-primary border-gray-300">
+                            <input type="radio" name="delimiter" value="auto" checked class="h-4 w-4 text-primary border-gray-300">
+                            <span class="ml-2 text-sm text-gray-700 font-medium">Auto-detect</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="delimiter" value="tab" class="h-4 w-4 text-primary border-gray-300">
                             <span class="ml-2 text-sm text-gray-700">Tab</span>
                         </label>
                         <label class="inline-flex items-center">
@@ -236,6 +240,9 @@ Magazzini Alimentari Riuniti	Giovanni Rovelli	Italy`;
             let delimiter;
 
             switch (delimiterType) {
+                case 'auto':
+                    delimiter = detectDelimiter(input);
+                    break;
                 case 'tab':
                     delimiter = '\t';
                     break;
