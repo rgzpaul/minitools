@@ -57,7 +57,7 @@
                     <li>Select the appropriate delimiter or let the system auto-detect it</li>
                     <li>Click "Parse Data" to generate an interactive table with sorting and filtering</li>
                     <li>Select which columns you want to include in the processed table</li>
-                    <li>Use the filtering options to include or exclude specific content</li>
+                    <li>Use the advanced filtering options to create complex filter rules</li>
                     <li>Click on column headers to sort the table by that column</li>
                 </ol>
             </div>
@@ -128,17 +128,14 @@
                 <div class="text-sm text-gray-600">
                     Showing <span id="filteredCount">0</span> of <span id="totalCount">0</span> rows
                 </div>
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Only show rows containing</label>
-                        <input type="text" id="filterInput" placeholder="Filter content..." class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Exclude rows containing</label>
-                        <input type="text" id="excludeInput" placeholder="Content to exclude..." class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                    <div class="flex items-end">
-                        <button id="resetFilters" class="text-sm text-primary hover:text-primary-dark transition duration-200 px-3 py-1">Reset Filters</button>
+                
+                <!-- Advanced Filter Section -->
+                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Advanced Filters</h3>
+                    <div id="filterRules" class="space-y-2"></div>
+                    <div class="mt-3 flex gap-2">
+                        <button id="addFilter" class="text-sm bg-primary text-white px-3 py-1 rounded hover:bg-primary-dark transition duration-200">+ Add Filter</button>
+                        <button id="clearFilters" class="text-sm text-primary hover:text-primary-dark transition duration-200 px-3 py-1">Clear All</button>
                     </div>
                 </div>
             </div>
@@ -167,16 +164,17 @@
         let filteredData = [];
         let selectedColumns = [];
         let currentSort = { column: -1, direction: 'asc' };
+        let filters = [];
 
         $(document).ready(function() {
             // Load sample data
             const sampleData = `Company	Contact	Country
-                Alfreds Futterkiste	Maria Anders	Germany
-                Centro comercial Moctezuma	Francisco Chang	Mexico
-                Ernst Handel	Roland Mendel	Austria
-                Island Trading	Helen Bennett	UK
-                Laughing Bacchus Winecellars	Yoshi Tannamuri	Canada
-                Magazzini Alimentari Riuniti	Giovanni Rovelli	Italy`;
+Alfreds Futterkiste	Maria Anders	Germany
+Centro comercial Moctezuma	Francisco Chang	Mexico
+Ernst Handel	Roland Mendel	Austria
+Island Trading	Helen Bennett	UK
+Laughing Bacchus Winecellars	Yoshi Tannamuri	Canada
+Magazzini Alimentari Riuniti	Giovanni Rovelli	Italy`;
             $('#dataInput').val(sampleData);
 
             // Event listeners
@@ -184,8 +182,8 @@
             $('#selectAll').on('click', () => $('#columnCheckboxes input[type="checkbox"]').prop('checked', true));
             $('#deselectAll').on('click', () => $('#columnCheckboxes input[type="checkbox"]').prop('checked', false));
             $('#generateTableBtn').on('click', generateTable);
-            $('#filterInput, #excludeInput').on('input', applyFilters);
-            $('#resetFilters').on('click', resetFilters);
+            $('#addFilter').on('click', addFilter);
+            $('#clearFilters').on('click', clearFilters);
 
             // Auto-select custom delimiter input when radio is selected
             $('input[name="delimiter"][value="custom"]').on('change', function() {
@@ -335,6 +333,8 @@
                 selectedColumns.map(colIndex => row[colIndex] || '')
             );
 
+            filters = [];
+            renderFilters();
             renderTable();
             $('#result').removeClass('hidden');
         }
@@ -383,7 +383,13 @@
                 tableBody.append(tr);
             });
 
-            updateCounts();
+            // Apply filters after rendering
+            applyFilters();
+            
+            // Small delay to ensure DOM is ready before counting
+            setTimeout(function() {
+                updateCounts();
+            }, 10);
         }
 
         function sortTable(columnIndex) {
@@ -422,24 +428,135 @@
             $('#tableHead th').eq(columnIndex).addClass(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
         }
 
-        function applyFilters() {
-            const includeText = $('#filterInput').val().toLowerCase();
-            const excludeText = $('#excludeInput').val().toLowerCase();
+        function addFilter() {
+            const newFilter = {
+                id: Date.now(),
+                column: 0,
+                condition: 'contains',
+                value: '',
+                operator: filters.length > 0 ? 'AND' : null
+            };
+            filters.push(newFilter);
+            renderFilters();
+        }
 
+        function clearFilters() {
+            filters = [];
+            renderFilters();
+            applyFilters();
+        }
+
+        function renderFilters() {
+            const container = $('#filterRules');
+            container.empty();
+
+            filters.forEach((filter, index) => {
+                const filterRow = $('<div>').addClass('flex flex-wrap gap-2 items-center p-2 bg-white rounded border border-gray-200');
+                
+                // AND/OR operator (except for first filter)
+                if (index > 0) {
+                    const operatorSelect = $('<select>')
+                        .addClass('text-sm border border-gray-300 rounded px-2 py-1')
+                        .html('<option value="AND">AND</option><option value="OR">OR</option>')
+                        .val(filter.operator)
+                        .on('change', function() {
+                            filter.operator = $(this).val();
+                            applyFilters();
+                        });
+                    filterRow.append(operatorSelect);
+                }
+
+                // Column select
+                const columnSelect = $('<select>')
+                    .addClass('text-sm border border-gray-300 rounded px-2 py-1');
+                
+                const headers = filteredData[0];
+                headers.forEach((header, i) => {
+                    columnSelect.append(`<option value="${i}">${header || 'Column ' + (i + 1)}</option>`);
+                });
+                
+                columnSelect.val(filter.column)
+                    .on('change', function() {
+                        filter.column = parseInt($(this).val());
+                        applyFilters();
+                    });
+                filterRow.append(columnSelect);
+
+                // Condition select
+                const conditionSelect = $('<select>')
+                    .addClass('text-sm border border-gray-300 rounded px-2 py-1')
+                    .html('<option value="contains">Contains</option><option value="not-contains">Does not contain</option>')
+                    .val(filter.condition)
+                    .on('change', function() {
+                        filter.condition = $(this).val();
+                        applyFilters();
+                    });
+                filterRow.append(conditionSelect);
+
+                // Value input
+                const valueInput = $('<input>')
+                    .attr('type', 'text')
+                    .attr('placeholder', 'Value...')
+                    .addClass('text-sm border border-gray-300 rounded px-2 py-1 flex-1 min-w-[120px]')
+                    .val(filter.value)
+                    .on('input', function() {
+                        filter.value = $(this).val();
+                        applyFilters();
+                    });
+                filterRow.append(valueInput);
+
+                // Remove button
+                const removeBtn = $('<button>')
+                    .text('×')
+                    .addClass('text-red-600 hover:text-red-800 font-bold text-lg px-2')
+                    .on('click', function() {
+                        filters.splice(index, 1);
+                        renderFilters();
+                        applyFilters();
+                    });
+                filterRow.append(removeBtn);
+
+                container.append(filterRow);
+            });
+        }
+
+        function applyFilters() {
             $('#dataTable tbody tr').each(function() {
                 const row = $(this);
-                const text = row.text().toLowerCase();
-                const includeMatch = includeText === '' || text.includes(includeText);
-                const excludeMatch = excludeText !== '' && text.includes(excludeText);
-                row.toggle(includeMatch && !excludeMatch);
+                const show = evaluateFilters(row);
+                row.toggle(show);
             });
-
             updateCounts();
         }
 
-        function resetFilters() {
-            $('#filterInput, #excludeInput').val('');
-            applyFilters();
+        function evaluateFilters(row) {
+            if (filters.length === 0) return true;
+
+            let result = evaluateFilter(filters[0], row);
+            
+            for (let i = 1; i < filters.length; i++) {
+                const filter = filters[i];
+                const filterResult = evaluateFilter(filter, row);
+                
+                if (filter.operator === 'AND') {
+                    result = result && filterResult;
+                } else {
+                    result = result || filterResult;
+                }
+            }
+            
+            return result;
+        }
+
+        function evaluateFilter(filter, row) {
+            const cellText = $(row).find('td').eq(filter.column).text().toLowerCase();
+            const filterValue = filter.value.toLowerCase();
+            
+            if (filter.condition === 'contains') {
+                return cellText.includes(filterValue);
+            } else {
+                return !cellText.includes(filterValue);
+            }
         }
 
         function updateCounts() {

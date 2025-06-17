@@ -1,4 +1,4 @@
-<!-- v2.1 -->
+<!-- v2.2 with Advanced Filtering -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -57,7 +57,7 @@
                     <li>Click "Analyze Table" to identify column headers</li>
                     <li>Select which columns you want to include in the processed table</li>
                     <li>Click "Generate Table" to create your interactive table</li>
-                    <li>Use the filtering options to include or exclude specific content</li>
+                    <li>Use the advanced filtering options to create complex filter rules</li>
                     <li>Click on column headers to sort the table by that column</li>
                 </ol>
             </div>
@@ -95,17 +95,14 @@
                 <div class="text-sm text-gray-600">
                     Showing <span id="filteredCount">0</span> of <span id="totalCount">0</span> rows
                 </div>
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Only show rows containing</label>
-                        <input type="text" id="filterInput" placeholder="Filter content..." class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Exclude rows containing</label>
-                        <input type="text" id="excludeInput" placeholder="Content to exclude..." class="w-full p-3 border border-gray-300 rounded-lg">
-                    </div>
-                    <div class="flex items-end">
-                        <button id="resetFilters" class="text-sm text-primary hover:text-primary-dark transition duration-200 px-3 py-1">Reset Filters</button>
+                
+                <!-- Advanced Filter Section -->
+                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Advanced Filters</h3>
+                    <div id="filterRules" class="space-y-2"></div>
+                    <div class="mt-3 flex gap-2">
+                        <button id="addFilter" class="text-sm bg-primary text-white px-3 py-1 rounded hover:bg-primary-dark transition duration-200">+ Add Filter</button>
+                        <button id="clearFilters" class="text-sm text-primary hover:text-primary-dark transition duration-200 px-3 py-1">Clear All</button>
                     </div>
                 </div>
             </div>
@@ -126,6 +123,8 @@
         $(document).ready(function() {
             let originalTable = null;
             let columnHeaders = [];
+            let selectedColumns = [];
+            let filters = [];
 
             // Load sample HTML table data
             const sampleTableHtml = `<table>
@@ -218,7 +217,7 @@
             });
 
             $('#processButton').on('click', function() {
-                const selectedColumns = [];
+                selectedColumns = [];
                 $('#columnCheckboxes input[type="checkbox"]').each(function(index) {
                     if ($(this).is(':checked')) {
                         selectedColumns.push(index);
@@ -232,6 +231,8 @@
 
                 processTable(originalTable.clone(), selectedColumns);
                 $('#results').removeClass('hidden');
+                filters = [];
+                renderFilters();
             });
 
             function processTable(table, selectedColumns) {
@@ -245,7 +246,6 @@
 
                 // Ensure proper table structure with thead and tbody
                 if (table.find('thead').length === 0) {
-                    // Move first row with th elements to thead
                     const headerRow = table.find('tr').first();
                     if (headerRow.find('th').length > 0) {
                         const thead = $('<thead>').append(headerRow);
@@ -253,7 +253,6 @@
                     }
                 }
 
-                // Ensure tbody exists for data rows
                 if (table.find('tbody').length === 0) {
                     const dataRows = table.find('tr').has('td');
                     const tbody = $('<tbody>').append(dataRows);
@@ -268,7 +267,7 @@
                 table.find('th').addClass('px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap cursor-pointer sortable');
                 table.find('td').addClass('px-6 py-4 whitespace-nowrap text-sm text-gray-900');
 
-                // Add alternating row colors and hover effects like tabParse
+                // Add alternating row colors and hover effects
                 table.find('tbody tr').each(function(index) {
                     const tr = $(this).addClass('hover:bg-blue-50 transition-colors duration-150');
                     if (index % 2 === 0) {
@@ -277,8 +276,11 @@
                 });
 
                 $('#processedTable').html(table);
-                updateCounts();
                 bindEvents();
+                // Small delay to ensure DOM is ready
+                setTimeout(function() {
+                    updateCounts();
+                }, 10);
             }
 
             function bindEvents() {
@@ -287,10 +289,8 @@
                     const currentSort = $(this).hasClass('sort-asc') ? 'asc' : 
                                       $(this).hasClass('sort-desc') ? 'desc' : 'none';
                     
-                    // Remove sort classes from all headers
                     $('#processedTable th').removeClass('sort-asc sort-desc');
                     
-                    // Apply new sort class
                     if (currentSort === 'none' || currentSort === 'desc') {
                         $(this).addClass('sort-asc');
                         sortTable(column, true);
@@ -299,31 +299,137 @@
                         sortTable(column, false);
                     }
                 });
+            }
 
-                // Combined filtering
-                $('#filterInput, #excludeInput').on('input', function() {
-                    applyFilters();
-                });
+            $('#addFilter').on('click', function() {
+                const newFilter = {
+                    id: Date.now(),
+                    column: 0,
+                    condition: 'contains',
+                    value: '',
+                    operator: filters.length > 0 ? 'AND' : null
+                };
+                filters.push(newFilter);
+                renderFilters();
+            });
 
-                $('#resetFilters').on('click', function() {
-                    $('#filterInput, #excludeInput').val('');
-                    applyFilters();
+            $('#clearFilters').on('click', function() {
+                filters = [];
+                renderFilters();
+                applyFilters();
+            });
+
+            function renderFilters() {
+                const container = $('#filterRules');
+                container.empty();
+
+                filters.forEach((filter, index) => {
+                    const filterRow = $('<div>').addClass('flex flex-wrap gap-2 items-center p-2 bg-white rounded border border-gray-200');
+                    
+                    // AND/OR operator (except for first filter)
+                    if (index > 0) {
+                        const operatorSelect = $('<select>')
+                            .addClass('text-sm border border-gray-300 rounded px-2 py-1')
+                            .html('<option value="AND">AND</option><option value="OR">OR</option>')
+                            .val(filter.operator)
+                            .on('change', function() {
+                                filter.operator = $(this).val();
+                                applyFilters();
+                            });
+                        filterRow.append(operatorSelect);
+                    }
+
+                    // Column select
+                    const columnSelect = $('<select>')
+                        .addClass('text-sm border border-gray-300 rounded px-2 py-1');
+                    
+                    const activeHeaders = selectedColumns.map(i => columnHeaders[i]);
+                    activeHeaders.forEach((header, i) => {
+                        columnSelect.append(`<option value="${i}">${header}</option>`);
+                    });
+                    
+                    columnSelect.val(filter.column)
+                        .on('change', function() {
+                            filter.column = parseInt($(this).val());
+                            applyFilters();
+                        });
+                    filterRow.append(columnSelect);
+
+                    // Condition select
+                    const conditionSelect = $('<select>')
+                        .addClass('text-sm border border-gray-300 rounded px-2 py-1')
+                        .html('<option value="contains">Contains</option><option value="not-contains">Does not contain</option>')
+                        .val(filter.condition)
+                        .on('change', function() {
+                            filter.condition = $(this).val();
+                            applyFilters();
+                        });
+                    filterRow.append(conditionSelect);
+
+                    // Value input
+                    const valueInput = $('<input>')
+                        .attr('type', 'text')
+                        .attr('placeholder', 'Value...')
+                        .addClass('text-sm border border-gray-300 rounded px-2 py-1 flex-1 min-w-[120px]')
+                        .val(filter.value)
+                        .on('input', function() {
+                            filter.value = $(this).val();
+                            applyFilters();
+                        });
+                    filterRow.append(valueInput);
+
+                    // Remove button
+                    const removeBtn = $('<button>')
+                        .text('×')
+                        .addClass('text-red-600 hover:text-red-800 font-bold text-lg px-2')
+                        .on('click', function() {
+                            filters.splice(index, 1);
+                            renderFilters();
+                            applyFilters();
+                        });
+                    filterRow.append(removeBtn);
+
+                    container.append(filterRow);
                 });
             }
 
             function applyFilters() {
-                const includeText = $('#filterInput').val().toLowerCase();
-                const excludeText = $('#excludeInput').val().toLowerCase();
-
                 $('#processedTable table tbody tr').each(function() {
                     const row = $(this);
-                    const text = row.text().toLowerCase();
-                    const includeMatch = includeText === '' || text.includes(includeText);
-                    const excludeMatch = excludeText !== '' && text.includes(excludeText);
-                    row.toggle(includeMatch && !excludeMatch);
+                    const show = evaluateFilters(row);
+                    row.toggle(show);
                 });
-
                 updateCounts();
+            }
+
+            function evaluateFilters(row) {
+                if (filters.length === 0) return true;
+
+                let result = evaluateFilter(filters[0], row);
+                
+                for (let i = 1; i < filters.length; i++) {
+                    const filter = filters[i];
+                    const filterResult = evaluateFilter(filter, row);
+                    
+                    if (filter.operator === 'AND') {
+                        result = result && filterResult;
+                    } else {
+                        result = result || filterResult;
+                    }
+                }
+                
+                return result;
+            }
+
+            function evaluateFilter(filter, row) {
+                const cellText = $(row).find('td').eq(filter.column).text().toLowerCase();
+                const filterValue = filter.value.toLowerCase();
+                
+                if (filter.condition === 'contains') {
+                    return cellText.includes(filterValue);
+                } else {
+                    return !cellText.includes(filterValue);
+                }
             }
 
             function sortTable(column, asc) {
@@ -334,7 +440,6 @@
                     const aText = $(a).find('td').eq(column).text().toLowerCase();
                     const bText = $(b).find('td').eq(column).text().toLowerCase();
 
-                    // Try to compare as numbers first
                     const aNum = parseFloat(aText);
                     const bNum = parseFloat(bText);
 
@@ -342,14 +447,12 @@
                         return asc ? aNum - bNum : bNum - aNum;
                     }
 
-                    // Compare as strings with locale-aware comparison
                     const comparison = aText.localeCompare(bText, undefined, { numeric: true, sensitivity: 'base' });
                     return asc ? comparison : -comparison;
                 });
 
                 tbody.empty().append(rows);
                 
-                // Reapply alternating row colors after sorting
                 tbody.find('tr').each(function(index) {
                     $(this).removeClass('bg-gray-50');
                     if (index % 2 === 0) {
