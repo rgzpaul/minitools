@@ -1,4 +1,4 @@
-<!-- v2.2 with Advanced Filtering -->
+<!-- v2.3 with Clean Table Rebuild -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -108,7 +108,14 @@
             </div>
 
             <div class="overflow-x-auto">
-                <div id="processedTable"></div>
+                <table id="dataTable" class="min-w-full divide-y divide-gray-200">
+                    <thead id="tableHead" class="bg-primary">
+                        <!-- Headers will be added here by JavaScript -->
+                    </thead>
+                    <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Table data will be added here by JavaScript -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </main>
@@ -121,9 +128,10 @@
 
     <script>
         $(document).ready(function() {
-            let originalTable = null;
-            let columnHeaders = [];
+            let extractedData = [];
+            let filteredData = [];
             let selectedColumns = [];
+            let currentSort = { column: -1, direction: 'asc' };
             let filters = [];
 
             // Load sample HTML table data
@@ -171,21 +179,50 @@
 
                 // Create a temporary div to parse the HTML
                 const temp = $('<div>').html(tableHtml);
-                originalTable = $(temp).find('table').first();
+                const originalTable = $(temp).find('table').first();
 
                 if (originalTable.length === 0) {
                     alert('No valid table found in input');
                     return;
                 }
 
-                // Extract headers and create checkboxes
-                columnHeaders = [];
+                // Extract data from HTML table into clean array structure
+                extractedData = [];
+                const headers = [];
+                
+                // Extract headers
+                originalTable.find('th').each(function() {
+                    headers.push($(this).text().trim());
+                });
+                
+                // If no th elements, try first tr with td elements
+                if (headers.length === 0) {
+                    originalTable.find('tr:first td').each(function() {
+                        headers.push($(this).text().trim());
+                    });
+                    extractedData.push(headers);
+                } else {
+                    extractedData.push(headers);
+                }
+
+                // Extract data rows
+                const startRow = headers.length === 0 ? 1 : 0;
+                originalTable.find('tr').each(function(rowIndex) {
+                    if (rowIndex < startRow) return;
+                    
+                    const rowData = [];
+                    $(this).find('td').each(function() {
+                        rowData.push($(this).text().trim());
+                    });
+                    
+                    if (rowData.length > 0) {
+                        extractedData.push(rowData);
+                    }
+                });
+
+                // Create column selection checkboxes
                 const checkboxesDiv = $('#columnCheckboxes').empty();
-
-                originalTable.find('th').each(function(index) {
-                    const headerText = $(this).text().trim();
-                    columnHeaders.push(headerText);
-
+                extractedData[0].forEach((header, index) => {
                     const checkbox = $('<div>').addClass('flex items-center gap-2')
                         .append(
                             $('<input>')
@@ -197,7 +234,7 @@
                         .append(
                             $('<label>')
                             .attr('for', `col-${index}`)
-                            .text(headerText)
+                            .text(header || `Column ${index + 1}`)
                             .addClass('text-sm text-gray-700')
                         );
 
@@ -229,76 +266,104 @@
                     return;
                 }
 
-                processTable(originalTable.clone(), selectedColumns);
-                $('#results').removeClass('hidden');
+                // Filter data to include only selected columns
+                filteredData = extractedData.map(row => 
+                    selectedColumns.map(colIndex => row[colIndex] || '')
+                );
+
                 filters = [];
                 renderFilters();
+                renderTable();
+                $('#results').removeClass('hidden');
             });
 
-            function processTable(table, selectedColumns) {
-                const allColumns = [...Array(columnHeaders.length).keys()];
-                const columnsToRemove = allColumns.filter(i => !selectedColumns.includes(i));
+            function renderTable() {
+                const tableHead = $('#tableHead');
+                const tableBody = $('#tableBody');
 
-                for (let i = columnsToRemove.length - 1; i >= 0; i--) {
-                    const columnIndex = columnsToRemove[i];
-                    table.find(`th:eq(${columnIndex}), td:nth-child(${columnIndex + 1})`).remove();
+                if (filteredData.length === 0) {
+                    tableHead.html('');
+                    tableBody.html('<tr><td colspan="100%" class="px-6 py-4 text-center text-gray-500 italic">No data to display</td></tr>');
+                    return;
                 }
 
-                // Ensure proper table structure with thead and tbody
-                if (table.find('thead').length === 0) {
-                    const headerRow = table.find('tr').first();
-                    if (headerRow.find('th').length > 0) {
-                        const thead = $('<thead>').append(headerRow);
-                        table.prepend(thead);
-                    }
-                }
+                // Create header
+                const headers = filteredData[0];
+                tableHead.html('');
+                const headerRow = $('<tr>');
+                
+                headers.forEach((header, index) => {
+                    const th = $('<th>')
+                        .addClass('px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap cursor-pointer sortable')
+                        .text(header || `Column ${index + 1}`)
+                        .on('click', () => sortTable(index));
+                    
+                    headerRow.append(th);
+                });
+                tableHead.append(headerRow);
 
-                if (table.find('tbody').length === 0) {
-                    const dataRows = table.find('tr').has('td');
-                    const tbody = $('<tbody>').append(dataRows);
-                    table.append(tbody);
-                }
-
-                // Apply tabParse styling
-                table.addClass('min-w-full divide-y divide-gray-200');
-                table.find('thead').addClass('bg-primary');
-                table.find('tbody').addClass('bg-white divide-y divide-gray-200');
-
-                table.find('th').addClass('px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap cursor-pointer sortable');
-                table.find('td').addClass('px-6 py-4 whitespace-nowrap text-sm text-gray-900');
-
-                // Add alternating row colors and hover effects
-                table.find('tbody tr').each(function(index) {
-                    const tr = $(this).addClass('hover:bg-blue-50 transition-colors duration-150');
-                    if (index % 2 === 0) {
+                // Create body
+                tableBody.html('');
+                const dataRows = filteredData.slice(1);
+                
+                dataRows.forEach((row, rowIndex) => {
+                    const tr = $('<tr>').addClass('hover:bg-blue-50 transition-colors duration-150');
+                    if (rowIndex % 2 === 0) {
                         tr.addClass('bg-gray-50');
                     }
+                    
+                    row.forEach(cell => {
+                        const td = $('<td>')
+                            .addClass('px-6 py-4 whitespace-nowrap text-sm text-gray-900')
+                            .text(cell);
+                        tr.append(td);
+                    });
+                    tableBody.append(tr);
                 });
 
-                $('#processedTable').html(table);
-                bindEvents();
-                // Small delay to ensure DOM is ready
+                // Apply filters after rendering
+                applyFilters();
+                
+                // Small delay to ensure DOM is ready before counting
                 setTimeout(function() {
                     updateCounts();
                 }, 10);
             }
 
-            function bindEvents() {
-                $('#processedTable th').on('click', function() {
-                    const column = $(this).index();
-                    const currentSort = $(this).hasClass('sort-asc') ? 'asc' : 
-                                      $(this).hasClass('sort-desc') ? 'desc' : 'none';
-                    
-                    $('#processedTable th').removeClass('sort-asc sort-desc');
-                    
-                    if (currentSort === 'none' || currentSort === 'desc') {
-                        $(this).addClass('sort-asc');
-                        sortTable(column, true);
-                    } else {
-                        $(this).addClass('sort-desc');
-                        sortTable(column, false);
+            function sortTable(columnIndex) {
+                if (currentSort.column === columnIndex) {
+                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.column = columnIndex;
+                    currentSort.direction = 'asc';
+                }
+
+                const header = filteredData[0];
+                const dataRows = filteredData.slice(1);
+
+                dataRows.sort((a, b) => {
+                    const aVal = a[columnIndex] || '';
+                    const bVal = b[columnIndex] || '';
+
+                    // Try to compare as numbers first
+                    const aNum = parseFloat(aVal);
+                    const bNum = parseFloat(bVal);
+
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        return currentSort.direction === 'asc' ? aNum - bNum : bNum - aNum;
                     }
+
+                    // Compare as strings
+                    const comparison = aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' });
+                    return currentSort.direction === 'asc' ? comparison : -comparison;
                 });
+
+                filteredData = [header, ...dataRows];
+                renderTable();
+                
+                // Reapply sort class after table is rendered
+                $('#tableHead th').removeClass('sort-asc sort-desc');
+                $('#tableHead th').eq(columnIndex).addClass(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
             }
 
             $('#addFilter').on('click', function() {
@@ -343,9 +408,9 @@
                     const columnSelect = $('<select>')
                         .addClass('text-sm border border-gray-300 rounded px-2 py-1');
                     
-                    const activeHeaders = selectedColumns.map(i => columnHeaders[i]);
-                    activeHeaders.forEach((header, i) => {
-                        columnSelect.append(`<option value="${i}">${header}</option>`);
+                    const headers = filteredData[0];
+                    headers.forEach((header, i) => {
+                        columnSelect.append(`<option value="${i}">${header || 'Column ' + (i + 1)}</option>`);
                     });
                     
                     columnSelect.val(filter.column)
@@ -394,7 +459,7 @@
             }
 
             function applyFilters() {
-                $('#processedTable table tbody tr').each(function() {
+                $('#dataTable tbody tr').each(function() {
                     const row = $(this);
                     const show = evaluateFilters(row);
                     row.toggle(show);
@@ -432,38 +497,9 @@
                 }
             }
 
-            function sortTable(column, asc) {
-                const tbody = $('#processedTable table tbody');
-                const rows = tbody.find('tr').toArray();
-
-                rows.sort(function(a, b) {
-                    const aText = $(a).find('td').eq(column).text().toLowerCase();
-                    const bText = $(b).find('td').eq(column).text().toLowerCase();
-
-                    const aNum = parseFloat(aText);
-                    const bNum = parseFloat(bText);
-
-                    if (!isNaN(aNum) && !isNaN(bNum)) {
-                        return asc ? aNum - bNum : bNum - aNum;
-                    }
-
-                    const comparison = aText.localeCompare(bText, undefined, { numeric: true, sensitivity: 'base' });
-                    return asc ? comparison : -comparison;
-                });
-
-                tbody.empty().append(rows);
-                
-                tbody.find('tr').each(function(index) {
-                    $(this).removeClass('bg-gray-50');
-                    if (index % 2 === 0) {
-                        $(this).addClass('bg-gray-50');
-                    }
-                });
-            }
-
             function updateCounts() {
-                const total = $('#processedTable table tbody tr').length;
-                const visible = $('#processedTable table tbody tr:visible').length;
+                const total = $('#dataTable tbody tr').length;
+                const visible = $('#dataTable tbody tr:visible').length;
                 $('#totalCount').text(total);
                 $('#filteredCount').text(visible);
             }
