@@ -370,9 +370,6 @@ Magazzini Alimentari Riuniti	Giovanni Rovelli	Italy`;
             
             dataRows.forEach((row, rowIndex) => {
                 const tr = $('<tr>').addClass('hover:bg-blue-50 transition-colors duration-150');
-                if (rowIndex % 2 === 0) {
-                    tr.addClass('bg-gray-50');
-                }
                 
                 row.forEach(cell => {
                     const td = $('<td>')
