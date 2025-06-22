@@ -1,4 +1,4 @@
-<!-- v2.3 with Clean Table Rebuild -->
+<!-- v2.4 with Exact Match Filter -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -420,7 +420,7 @@
                     // Condition select
                     const conditionSelect = $('<select>')
                         .addClass('text-sm border border-gray-300 rounded px-2 py-1')
-                        .html('<option value="contains">Contains</option><option value="not-contains">Does not contain</option>')
+                        .html('<option value="contains">Contains</option><option value="not-contains">Does not contain</option><option value="exact">Exact match</option><option value="not-exact">Not exact match</option>')
                         .val(filter.condition)
                         .on('change', function() {
                             filter.condition = $(this).val();
@@ -484,13 +484,24 @@
             }
 
             function evaluateFilter(filter, row) {
-                const cellText = $(row).find('td').eq(filter.column).text().toLowerCase();
-                const filterValue = filter.value.toLowerCase();
+                const cellText = $(row).find('td').eq(filter.column).text().trim();
+                const filterValue = filter.value.trim();
                 
-                if (filter.condition === 'contains') {
-                    return cellText.includes(filterValue);
-                } else {
-                    return !cellText.includes(filterValue);
+                // Case-insensitive comparison for all conditions
+                const cellTextLower = cellText.toLowerCase();
+                const filterValueLower = filterValue.toLowerCase();
+                
+                switch (filter.condition) {
+                    case 'contains':
+                        return cellTextLower.includes(filterValueLower);
+                    case 'not-contains':
+                        return !cellTextLower.includes(filterValueLower);
+                    case 'exact':
+                        return cellTextLower === filterValueLower;
+                    case 'not-exact':
+                        return cellTextLower !== filterValueLower;
+                    default:
+                        return true;
                 }
             }
 
