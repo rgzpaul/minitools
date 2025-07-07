@@ -1,0 +1,515 @@
+<!-- v2.1 -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FilesExtr</title>
+    <link href="https://minisoft.it/icons/fix.png" rel="shortcut icon" type="image/x-icon" />
+    <link href="https://minisoft.it/icons/fix.png" rel="apple-touch-icon" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#006E81',
+                        'primary-dark': '#006E81',
+                        secondary: '#814000',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-6 max-w-4xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800">FilesExtr</h1>
+            <p class="text-gray-600 text-center mt-1">Multi-File Content Extractor</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Instructions Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Instructions</h2>
+            <div class="bg-slate-50 border-l-4 border-primary p-4 rounded-r">
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>Click "Choose Files" or drag and drop to upload multiple text files</li>
+                    <li>Enter the search term you want to find across all files</li>
+                    <li>Choose whether to use case-sensitive or regex search</li>
+                    <li>Click "Search Files" to find all matching lines</li>
+                    <li>View results organized by file with line numbers</li>
+                    <li>Use "Export Results" to download findings as a text file</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload Files</label>
+                    <div id="dropZone" class="w-full p-8 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-primary transition-colors cursor-pointer">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <input type="file" id="fileInput" multiple class="hidden">
+                        <p class="mt-2 text-sm text-gray-600">Drop files here or click to browse</p>
+                        <p class="text-xs text-gray-500 mt-1">All files will be treated as text</p>
+                        <p class="text-xs text-gray-500">You can add more files anytime</p>
+                    </div>
+                </div>
+
+                <div id="fileList" class="hidden">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Uploaded Files (<span id="fileCount">0</span>)</h3>
+                    <ul id="fileListItems" class="space-y-1 max-h-32 overflow-y-auto"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="space-y-4">
+                <div>
+                    <label for="searchTerm" class="block text-sm font-medium text-gray-700 mb-2">Search Term</label>
+                    <input type="text" id="searchTerm" class="w-full p-3 border border-gray-300 rounded-lg" 
+                           placeholder="Enter text to search for...">
+                </div>
+
+                <div class="flex flex-wrap gap-6">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" id="caseSensitive" class="h-4 w-4 text-primary border-gray-300 rounded">
+                        <span class="ml-2 text-sm text-gray-700">Case sensitive</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" id="useRegex" class="h-4 w-4 text-primary border-gray-300 rounded">
+                        <span class="ml-2 text-sm text-gray-700">Use regex</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" id="showContext" class="h-4 w-4 text-primary border-gray-300 rounded" checked>
+                        <span class="ml-2 text-sm text-gray-700">Show context lines</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-4">
+                    <button id="searchBtn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        Search Files
+                    </button>
+                    <button id="clearBtn" class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition duration-200">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Results</h2>
+                <button id="exportBtn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-200 text-sm">
+                    Export Results
+                </button>
+            </div>
+            
+            <div id="searchSummary" class="mb-4 p-3 bg-slate-50 rounded-lg text-sm text-gray-700"></div>
+            
+            <div id="results" class="space-y-4"></div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="container mx-auto px-4 py-6 max-w-4xl">
+            <p class="text-gray-600 text-center">&copy; <a href="https://minisoft.it/" class="text-primary hover:text-primary-dark">Minisoft</a> — All rights reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        let uploadedFiles = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileList = document.getElementById('fileList');
+            const fileListItems = document.getElementById('fileListItems');
+            const fileCount = document.getElementById('fileCount');
+            const searchBtn = document.getElementById('searchBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const searchTerm = document.getElementById('searchTerm');
+            const caseSensitive = document.getElementById('caseSensitive');
+            const useRegex = document.getElementById('useRegex');
+            const showContext = document.getElementById('showContext');
+            const resultsSection = document.getElementById('resultsSection');
+            const results = document.getElementById('results');
+            const searchSummary = document.getElementById('searchSummary');
+
+            // File upload handling
+            dropZone.addEventListener('click', () => fileInput.click());
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-primary', 'bg-blue-50');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-primary', 'bg-blue-50');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-primary', 'bg-blue-50');
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+
+            async function handleFiles(files) {
+                let newFilesAdded = 0;
+                let skippedFiles = 0;
+                
+                for (let file of files) {
+                    // Check if file already exists
+                    const existingFile = uploadedFiles.find(f => f.name === file.name);
+                    if (existingFile) {
+                        const replace = confirm(`File "${file.name}" already exists. Replace it?`);
+                        if (replace) {
+                            // Remove existing file
+                            uploadedFiles = uploadedFiles.filter(f => f.name !== file.name);
+                        } else {
+                            skippedFiles++;
+                            continue; // Skip this file
+                        }
+                    }
+                    
+                    try {
+                        const content = await readFile(file);
+                        uploadedFiles.push({
+                            name: file.name,
+                            size: file.size,
+                            content: content,
+                            lines: content.split('\n')
+                        });
+                        newFilesAdded++;
+                    } catch (error) {
+                        console.error(`Error reading ${file.name}:`, error);
+                        showStatus(`Could not read ${file.name} as text`, 'error');
+                    }
+                }
+                
+                if (newFilesAdded > 0) {
+                    showStatus(`Added ${newFilesAdded} file${newFilesAdded !== 1 ? 's' : ''}`, 'success');
+                }
+                if (skippedFiles > 0) {
+                    showStatus(`Skipped ${skippedFiles} duplicate file${skippedFiles !== 1 ? 's' : ''}`, 'info');
+                }
+                
+                updateFileList();
+                updateSearchButton();
+            }
+
+            function readFile(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsText(file);
+                });
+            }
+
+            // Status notification helper
+            function showStatus(message, type = 'info') {
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'fixed top-4 right-4 p-4 rounded-lg shadow-lg transition-all duration-500 transform translate-x-0';
+                
+                switch(type) {
+                    case 'success':
+                        statusDiv.className += ' bg-green-500 text-white';
+                        break;
+                    case 'error':
+                        statusDiv.className += ' bg-red-500 text-white';
+                        break;
+                    default:
+                        statusDiv.className += ' bg-primary text-white';
+                }
+                
+                statusDiv.textContent = message;
+                document.body.appendChild(statusDiv);
+                
+                setTimeout(() => {
+                    statusDiv.style.opacity = '0';
+                    statusDiv.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        document.body.removeChild(statusDiv);
+                    }, 500);
+                }, 3000);
+            }
+
+            function updateFileList() {
+                fileCount.textContent = uploadedFiles.length;
+                fileListItems.innerHTML = '';
+                
+                if (uploadedFiles.length > 0) {
+                    fileList.classList.remove('hidden');
+                    uploadedFiles.forEach((file, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center text-sm text-gray-600 p-2 bg-gray-50 rounded';
+                        
+                        // Format file size
+                        const fileSize = file.size ? formatFileSize(file.size) : '';
+                        
+                        li.innerHTML = `
+                            <span class="truncate flex-1">${file.name}</span>
+                            <span class="text-xs text-gray-500 mr-2">${fileSize}</span>
+                            <button onclick="removeFile(${index})" class="ml-2 text-red-600 hover:text-red-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        `;
+                        fileListItems.appendChild(li);
+                    });
+                } else {
+                    fileList.classList.add('hidden');
+                }
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            window.removeFile = function(index) {
+                uploadedFiles.splice(index, 1);
+                updateFileList();
+                updateSearchButton();
+                if (uploadedFiles.length === 0) {
+                    resultsSection.classList.add('hidden');
+                }
+            };
+
+            function updateSearchButton() {
+                searchBtn.disabled = uploadedFiles.length === 0;
+                if (uploadedFiles.length === 0) {
+                    searchBtn.classList.add('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+                } else {
+                    searchBtn.classList.remove('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+                }
+            }
+
+            // Search functionality
+            searchBtn.addEventListener('click', performSearch);
+            searchTerm.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && uploadedFiles.length > 0) {
+                    performSearch();
+                }
+            });
+
+            function performSearch() {
+                const term = searchTerm.value.trim();
+                if (!term) {
+                    alert('Please enter a search term');
+                    return;
+                }
+
+                results.innerHTML = '';
+                let totalMatches = 0;
+                let filesWithMatches = 0;
+
+                uploadedFiles.forEach(file => {
+                    const matches = searchInFile(file, term);
+                    if (matches.length > 0) {
+                        filesWithMatches++;
+                        totalMatches += matches.length;
+                        displayFileResults(file.name, matches);
+                    }
+                });
+
+                if (totalMatches > 0) {
+                    searchSummary.innerHTML = `Found <strong>${totalMatches}</strong> match${totalMatches !== 1 ? 'es' : ''} in <strong>${filesWithMatches}</strong> file${filesWithMatches !== 1 ? 's' : ''}`;
+                    resultsSection.classList.remove('hidden');
+                } else {
+                    searchSummary.innerHTML = '<span class="text-red-600">No matches found</span>';
+                    resultsSection.classList.remove('hidden');
+                }
+            }
+
+            function searchInFile(file, term) {
+                const matches = [];
+                const isRegex = useRegex.checked;
+                const isCaseSensitive = caseSensitive.checked;
+                const showCtx = showContext.checked;
+
+                let searchPattern;
+                try {
+                    if (isRegex) {
+                        searchPattern = new RegExp(term, isCaseSensitive ? 'g' : 'gi');
+                    } else {
+                        const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        searchPattern = new RegExp(escapedTerm, isCaseSensitive ? 'g' : 'gi');
+                    }
+                } catch (e) {
+                    alert('Invalid regex pattern');
+                    return matches;
+                }
+
+                file.lines.forEach((line, index) => {
+                    if (searchPattern.test(line)) {
+                        const match = {
+                            lineNumber: index + 1,
+                            content: line,
+                            context: []
+                        };
+
+                        if (showCtx) {
+                            // Add context lines (1 before and 1 after)
+                            if (index > 0) {
+                                match.context.push({
+                                    lineNumber: index,
+                                    content: file.lines[index - 1],
+                                    isContext: true
+                                });
+                            }
+                            if (index < file.lines.length - 1) {
+                                match.context.push({
+                                    lineNumber: index + 2,
+                                    content: file.lines[index + 1],
+                                    isContext: true
+                                });
+                            }
+                        }
+
+                        matches.push(match);
+                        searchPattern.lastIndex = 0; // Reset regex
+                    }
+                });
+
+                return matches;
+            }
+
+            function displayFileResults(fileName, matches) {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'border border-gray-200 rounded-lg overflow-hidden';
+
+                const header = document.createElement('div');
+                header.className = 'bg-gray-50 px-4 py-2 font-medium text-gray-800';
+                header.innerHTML = `${fileName} <span class="text-sm font-normal text-gray-600">(${matches.length} match${matches.length !== 1 ? 'es' : ''})</span>`;
+                fileDiv.appendChild(header);
+
+                const matchesDiv = document.createElement('div');
+                matchesDiv.className = 'divide-y divide-gray-100';
+
+                matches.forEach(match => {
+                    const matchDiv = document.createElement('div');
+                    matchDiv.className = 'p-3';
+
+                    // Show context line before if available
+                    if (match.context.length > 0 && match.context[0].lineNumber < match.lineNumber) {
+                        const contextLine = createLineElement(match.context[0], true);
+                        matchDiv.appendChild(contextLine);
+                    }
+
+                    // Show matched line
+                    const matchedLine = createLineElement(match, false);
+                    matchDiv.appendChild(matchedLine);
+
+                    // Show context line after if available
+                    if (match.context.length > 1) {
+                        const contextLine = createLineElement(match.context[1], true);
+                        matchDiv.appendChild(contextLine);
+                    }
+
+                    matchesDiv.appendChild(matchDiv);
+                });
+
+                fileDiv.appendChild(matchesDiv);
+                results.appendChild(fileDiv);
+            }
+
+            function createLineElement(lineData, isContext) {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = `flex ${isContext ? 'text-gray-500 text-sm' : 'text-gray-800'}`;
+
+                const lineNumber = document.createElement('span');
+                lineNumber.className = `inline-block w-12 text-right pr-3 ${isContext ? 'text-gray-400' : 'text-gray-600'} flex-shrink-0`;
+                lineNumber.textContent = lineData.lineNumber + ':';
+
+                const lineContent = document.createElement('span');
+                lineContent.className = 'font-mono text-sm whitespace-pre-wrap break-all';
+                
+                if (!isContext && searchTerm.value) {
+                    // Highlight search term in matched lines
+                    const term = searchTerm.value;
+                    const isRegex = useRegex.checked;
+                    const isCaseSensitive = caseSensitive.checked;
+                    
+                    let highlightedContent = lineData.content;
+                    try {
+                        const searchPattern = isRegex 
+                            ? new RegExp(term, isCaseSensitive ? 'g' : 'gi')
+                            : new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), isCaseSensitive ? 'g' : 'gi');
+                        
+                        highlightedContent = lineData.content.replace(searchPattern, match => 
+                            `<mark class="bg-yellow-200 text-gray-900 px-0.5 rounded">${match}</mark>`
+                        );
+                    } catch (e) {
+                        highlightedContent = lineData.content;
+                    }
+                    lineContent.innerHTML = highlightedContent;
+                } else {
+                    lineContent.textContent = lineData.content;
+                }
+
+                lineDiv.appendChild(lineNumber);
+                lineDiv.appendChild(lineContent);
+                return lineDiv;
+            }
+
+            // Export functionality - SIMPLIFIED VERSION
+            exportBtn.addEventListener('click', () => {
+                let exportContent = '';
+
+                uploadedFiles.forEach(file => {
+                    const matches = searchInFile(file, searchTerm.value);
+                    matches.forEach(match => {
+                        exportContent += match.content.trimStart() + '\n';
+                    });
+                });
+
+                downloadTextFile(exportContent, `filesextr_results_${Date.now()}.txt`);
+            });
+
+            function downloadTextFile(content, filename) {
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            // Clear functionality
+            clearBtn.addEventListener('click', () => {
+                uploadedFiles = [];
+                fileInput.value = '';
+                searchTerm.value = '';
+                updateFileList();
+                updateSearchButton();
+                resultsSection.classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+
+</html>
