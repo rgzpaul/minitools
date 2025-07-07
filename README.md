@@ -1,4 +1,4 @@
-# Minisoft Web Tools Collection (v2.1)
+# Minisoft Web Tools Collection (v2.2)
 
 A collection of simple yet powerful web-based tools for various text and HTML manipulation tasks. Some of these single-page applications run entirely in the browser with no server-side processing required.
 
