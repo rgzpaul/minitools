@@ -43,6 +43,7 @@ $self = basename(__FILE__);
             // Define groups and their files
             $groups = [
                 'HTML Table tools' => ['magicTable.html', 'tabParse.html', 'tbodyExtr.html'],
+                'QR-Code tools' => ['bulkr.html', 'qrGen.html'],
                 // Add more groups as needed
             ];
             
