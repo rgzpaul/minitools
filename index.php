@@ -40,10 +40,17 @@ $self = basename(__FILE__);
     <main class="container mx-auto px-4 py-8 max-w-md flex-grow">
         <ul class="grid grid-cols-2 gap-4">
             <?php
+            // Define groups and their files
+            $groups = [
+                'HTML Table tools' => ['magicTable.html', 'tabParse.html', 'tbodyExtr.html'],
+                // Add more groups as needed
+            ];
+            
             if ($handle = opendir($directory)) {
                 $files = array();
-
-                // First collect all valid files
+                $groupedFiles = array();
+                
+                // Collect all valid files
                 while (false !== ($file = readdir($handle))) {
                     if (
                         $file != $self
@@ -56,18 +63,33 @@ $self = basename(__FILE__);
                     }
                 }
                 closedir($handle);
-
-                // Sort files alphabetically
-                sort($files);
-
-                // Then output the links
-                foreach ($files as $file) {
-                    $fileName = pathinfo($file, PATHINFO_FILENAME);
-                    $filePath = htmlspecialchars($file);
-                    echo "<li class='text-center'><a href='$filePath' class='inline-block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-primary hover:scale-105 hover:shadow-md hover:bg-gray-50 transition duration-200'>$fileName</a></li>";
+                
+                // Categorize files
+                foreach ($groups as $groupName => $groupFiles) {
+                    $groupedFiles[$groupName] = array_intersect($files, $groupFiles);
+                    $files = array_diff($files, $groupFiles);
+                }
+                
+                // Add remaining files to "Other tools"
+                if (!empty($files)) {
+                    sort($files);
+                    $groupedFiles['Other tools'] = $files;
+                }
+                
+                // Output grouped files
+                foreach ($groupedFiles as $groupName => $groupFiles) {
+                    if (!empty($groupFiles)) {
+                        echo "<li class='col-span-2'><h2 class='text-lg font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-300'>$groupName</h2></li>";
+                        
+                        foreach ($groupFiles as $file) {
+                            $fileName = pathinfo($file, PATHINFO_FILENAME);
+                            $filePath = htmlspecialchars($file);
+                            echo "<li class='text-center'><a href='$filePath' class='inline-block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-primary hover:scale-105 hover:shadow-md hover:bg-gray-50 transition duration-200'>$fileName</a></li>";
+                        }
+                    }
                 }
             } else {
-                echo "<p class='text-center text-gray-700'>Could not open directory.</p>";
+                echo "<p class='text-center text-gray-700 col-span-2'>Could not open directory.</p>";
             }
             ?>
         </ul>
