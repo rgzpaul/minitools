@@ -38,7 +38,7 @@ $self = basename(__FILE__);
     </header>
 
     <main class="container mx-auto px-4 py-8 max-w-md flex-grow">
-        <ul class="grid grid-cols-2 gap-4">
+        <ul class="grid md:grid-cols-3 gap-4">
             <?php
             // Define groups and their files
             $groups = [
@@ -80,7 +80,7 @@ $self = basename(__FILE__);
                 // Output grouped files
                 foreach ($groupedFiles as $groupName => $groupFiles) {
                     if (!empty($groupFiles)) {
-                        echo "<li class='col-span-2'><h2 class='text-lg font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-300'>$groupName</h2></li>";
+                        echo "<li class='md:col-span-3'><h2 class='text-lg font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-300'>$groupName</h2></li>";
                         
                         foreach ($groupFiles as $file) {
                             $fileName = pathinfo($file, PATHINFO_FILENAME);
@@ -90,7 +90,7 @@ $self = basename(__FILE__);
                     }
                 }
             } else {
-                echo "<p class='text-center text-gray-700 col-span-2'>Could not open directory.</p>";
+                echo "<p class='text-center text-gray-700 md:col-span-3'>Could not open directory.</p>";
             }
             ?>
         </ul>
