@@ -44,6 +44,7 @@ $self = basename(__FILE__);
             $groups = [
                 'HTML Table tools' => ['magicTable.html', 'tabParse.html', 'tbodyExtr.html'],
                 'QR-Code tools' => ['bulkr.html', 'qrGen.html'],
+                'Extracting tools' => ['contentExtr.html', 'filesExtr.html', 'rangExtr.html']
                 // Add more groups as needed
             ];
             
